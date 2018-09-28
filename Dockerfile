@@ -3,29 +3,28 @@ LABEL maintainer="erik@martin-dorel.org"
 
 RUN apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
-    aspcud \
     autoconf \
     automake \
+    bubblewrap \
     build-essential \
     ca-certificates \
     curl \
-    emacs25-nox \
     git \
-    gosu \
-    less \
     m4 \
-    ocaml-best-compilers \
-    ocaml-core \
-    opam \
     pkg-config \
-    rlwrap \
     rsync \
     sudo \
-    time \
-  && echo "ocamlc -version => $(ocamlc -version)" \
-  && echo "opam --version => $(opam --version)" \
+    unzip \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  # Download the latest stable release of opam
+  && version=$(curl -fsS https://api.github.com/repos/ocaml/opam/releases/latest \
+  | grep '"tag_name":' | cut -d : -f 2 | tr -d \ ,\") \
+  && [ -n "$version" ] \
+  && binary="opam-${version}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
+  && curl -L https://github.com/ocaml/opam/releases/download/${version}/${binary} \
+    -o /usr/local/bin/opam \
+  && chmod a+x /usr/local/bin/opam
 
 # Use Docker build args to set the UID/GID
 ARG guest_uid=1000
@@ -33,7 +32,10 @@ ARG guest_gid=${guest_uid}
 
 # Add Coq group and user with sudo perms
 RUN groupadd -g ${guest_gid} coq \
-  && useradd --no-log-init -m -s /bin/bash -g coq -G sudo -p '' -u ${guest_uid} coq
+  && useradd --no-log-init -m -s /bin/bash -g coq -G sudo -p '' -u ${guest_uid} coq \
+  # Create dirs for user scripts
+  && mkdir -p -v /home/coq/bin /home/coq/.local/bin \
+  && chown coq:coq /home/coq/bin /home/coq/.local /home/coq/.local/bin
 
 # Load travis.sh at login
 COPY travis.sh /etc/profile.d/
@@ -42,20 +44,13 @@ WORKDIR /home/coq
 
 USER coq
 
-# Create dirs for user scripts
-# => one need not run "chown coq:coq bin .local .local/bin" afterwards
-RUN mkdir -p -v bin .local/bin
-
 ENV NJOBS="2"
 ENV COMPILER="4.02.3"
-ENV COQ_VERSION="8.8.1"
 
-# Setup OPAM and Coq
 RUN ["/bin/bash", "--login", "-c", "set -x \
-  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} \
-  && eval $(opam config env) \
-  && opam repository add coq-released https://coq.inria.fr/opam/released \
+  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
+  && eval $(opam env) \
+  && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
-  && opam pin add -n -k version coq ${COQ_VERSION} \
-  && opam install -y -j ${NJOBS} depext coq \
+  && opam install -y -j 1 depext \
   && opam config list && opam list"]
