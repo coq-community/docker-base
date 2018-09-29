@@ -14,6 +14,7 @@ RUN apt-get update -y -q \
     pkg-config \
     rsync \
     sudo \
+    time \
     unzip \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
