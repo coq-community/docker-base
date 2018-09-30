@@ -61,3 +61,7 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam switch create -y ${COMPILER_EDGE} \
   && eval $(opam env) \
   && opam config list && opam list"]
+
+ENTRYPOINT ["opam", "config", "exec", "--"]
+
+CMD ["/bin/bash", "--login"]
