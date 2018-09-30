@@ -55,9 +55,9 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam update -y \
   && opam install -y -j 1 depext"]
 
-ENV COMPILER_EDGE="4.07.0"
+ENV COMPILER_EDGE="4.07.0+flambda"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
-  && opam switch create -y ${COMPILER_EDGE}+flambda \
+  && opam switch create -y ${COMPILER_EDGE} \
   && eval $(opam env) \
   && opam config list && opam list"]
