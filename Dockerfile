@@ -10,8 +10,10 @@ RUN apt-get update -y -q \
     ca-certificates \
     curl \
     git \
+    less \
     m4 \
     pkg-config \
+    rlwrap \
     rsync \
     sudo \
     time \
