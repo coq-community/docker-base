@@ -48,10 +48,10 @@ WORKDIR /home/coq
 USER coq
 
 ENV NJOBS="2"
-ENV COMPILER_MIN="4.05.0"
+ENV COMPILER="4.05.0"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
-  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_MIN} --disable-sandboxing \
+  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
   && eval $(opam env) \
   && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
