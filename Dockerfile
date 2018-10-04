@@ -55,13 +55,15 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && eval $(opam env) \
   && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
-  && opam install -y -j 1 depext"]
+  && opam install -y -j 1 opam-depext \
+  && opam config list && opam list"]
 
 ENV COMPILER_EDGE="4.07.0+flambda"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam switch create -y ${COMPILER_EDGE} \
   && eval $(opam env) \
+  && opam install -y -j 1 opam-depext \
   && opam config list && opam list"]
 
 ENTRYPOINT ["opam", "config", "exec", "--"]
