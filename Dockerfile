@@ -48,7 +48,7 @@ WORKDIR /home/coq
 USER coq
 
 ENV NJOBS="2"
-ENV COMPILER_MIN="4.02.3"
+ENV COMPILER_MIN="4.05.0"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_MIN} --disable-sandboxing \
