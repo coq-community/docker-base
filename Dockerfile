@@ -66,6 +66,6 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam install -y -j 1 opam-depext \
   && opam config list && opam list"]
 
-ENTRYPOINT ["opam", "config", "exec", "--"]
+ENTRYPOINT ["opam", "exec", "--"]
 
 CMD ["/bin/bash", "--login"]
