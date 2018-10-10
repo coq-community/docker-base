@@ -49,9 +49,10 @@ USER coq
 
 ENV NJOBS="2"
 ENV COMPILER="4.05.0"
+ENV COMPILER_EDGE="4.07.0+flambda"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
-  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
+  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_EDGE} --disable-sandboxing \
   && eval $(opam env) \
   && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
@@ -59,10 +60,8 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam clean -a -c -s --logs \
   && opam config list && opam list"]
 
-ENV COMPILER_EDGE="4.07.0+flambda"
-
 RUN ["/bin/bash", "--login", "-c", "set -x \
-  && opam switch create -y ${COMPILER_EDGE} \
+  && opam switch create -y ${COMPILER} \
   && eval $(opam env) \
   && opam install -y -j 1 opam-depext \
   && opam clean -a -c -s --logs \
