@@ -10,6 +10,8 @@ RUN apt-get update -y -q \
     ca-certificates \
     curl \
     git \
+    # gnupg is temporarily installed and will not be kept in the image
+    gnupg \
     less \
     m4 \
     pkg-config \
@@ -18,16 +20,24 @@ RUN apt-get update -y -q \
     sudo \
     time \
     unzip \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
   # Download the latest stable release of opam
   && version=$(curl -fsS https://api.github.com/repos/ocaml/opam/releases/latest \
   | grep '"tag_name":' | cut -d : -f 2 | tr -d \ ,\") \
   && [ -n "$version" ] \
   && binary="opam-${version}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
-  && curl -L https://github.com/ocaml/opam/releases/download/${version}/${binary} \
-    -o /usr/local/bin/opam \
-  && chmod a+x /usr/local/bin/opam
+  && cd /tmp \
+  && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary} \
+  && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary}.asc \
+  && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --import \
+  && gpg --verify ${binary}.asc \
+  && set -x \
+  && mv ${binary} /usr/local/bin/opam \
+  && chmod a+x /usr/local/bin/opam \
+  && rm -f ${binary}.asc \
+  && rm -fr /root/.gnupg \
+  && DEBIAN_FRONTEND=noninteractive apt-get purge -y -q --auto-remove gnupg \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Use Docker build args to set the UID/GID
 ARG guest_uid=1000
