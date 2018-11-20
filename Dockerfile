@@ -28,8 +28,8 @@ RUN apt-get update -y -q \
   && cd /tmp \
   && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary} \
   && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary}.asc \
-  && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --import \
-  && gpg --verify ${binary}.asc \
+  && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --batch --import \
+  && gpg --batch --verify ${binary}.asc ${binary} \
   && set -x \
   && mv ${binary} /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
