@@ -1,4 +1,4 @@
-FROM debian:9
+FROM debian:10
 LABEL maintainer="erik@martin-dorel.org"
 
 RUN apt-get update -y -q \
