@@ -1,6 +1,8 @@
 FROM debian:10
 LABEL maintainer="erik@martin-dorel.org"
 
+ENV OPAM_VERSION="2.0.5"
+
 RUN apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
     autoconf \
@@ -20,14 +22,11 @@ RUN apt-get update -y -q \
     sudo \
     time \
     unzip \
-  # Download the latest stable release of opam
-  && version=$(curl -fsS https://api.github.com/repos/ocaml/opam/releases/latest \
-  | grep '"tag_name":' | cut -d : -f 2 | tr -d \ ,\") \
-  && [ -n "$version" ] \
-  && binary="opam-${version}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
+  && [ -n "${OPAM_VERSION}" ] \
+  && binary="opam-${OPAM_VERSION}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
   && cd /tmp \
-  && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary} \
-  && curl -fSOL https://github.com/ocaml/opam/releases/download/${version}/${binary}.asc \
+  && curl -fSOL https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary} \
+  && curl -fSOL https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc \
   && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --batch --import \
   && gpg --batch --verify ${binary}.asc ${binary} \
   && set -x \
