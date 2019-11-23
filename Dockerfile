@@ -1,4 +1,4 @@
-FROM debian:10
+FROM debian:10-slim
 LABEL maintainer="erik@martin-dorel.org"
 
 ENV OPAM_VERSION="2.0.5"
