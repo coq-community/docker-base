@@ -16,6 +16,7 @@ RUN apt-get update -y -q \
     gnupg \
     less \
     m4 \
+    openssh-client \
     pkg-config \
     rlwrap \
     rsync \
