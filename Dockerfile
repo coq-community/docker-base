@@ -59,7 +59,7 @@ USER coq
 
 ENV NJOBS="2"
 ENV COMPILER="4.05.0"
-ENV COMPILER_EDGE="4.07.1+flambda"
+ENV COMPILER_EDGE="4.09.0+flambda"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_EDGE} --disable-sandboxing \
