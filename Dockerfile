@@ -61,6 +61,8 @@ ENV NJOBS="2"
 ENV COMPILER="4.05.0"
 ENV COMPILER_EDGE="4.07.1+flambda"
 ENV OPAMPRECISETRACKING="1"
+ENV OCAMLFIND_VERSION="1.8.1"
+ENV DUNE_VERSION="2.4.0"
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_EDGE} --disable-sandboxing \
@@ -68,6 +70,10 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
   && opam install -y -j 1 opam-depext \
+  && opam pin add -n -k version ocamlfind ${OCAMLFIND_VERSION} \
+  && opam pin add -n -k version dune ${DUNE_VERSION} \
+  && opam pin add -n -k version num 1.3 \
+  && opam install -y -v -j ${NJOBS} ocamlfind dune num \
   && opam clean -a -c -s --logs \
   && opam config list && opam list"]
 
@@ -75,6 +81,10 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam switch create -y ${COMPILER} \
   && eval $(opam env) \
   && opam install -y -j 1 opam-depext \
+  && opam pin add -n -k version ocamlfind ${OCAMLFIND_VERSION} \
+  && opam pin add -n -k version dune ${DUNE_VERSION} \
+  && opam pin add -n -k version num 0 \
+  && opam install -y -v -j ${NJOBS} ocamlfind dune num \
   && opam clean -a -c -s --logs \
   && opam config list && opam list"]
 
