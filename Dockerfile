@@ -3,7 +3,7 @@ LABEL maintainer="erik@martin-dorel.org"
 
 ENV OPAM_VERSION="2.0.6"
 
-RUN apt-get update -y -q \
+RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
     autoconf \
     automake \
