@@ -66,6 +66,9 @@ ENV OCAMLFIND_VERSION=${OCAMLFIND_VERSION}
 ARG DUNE_VERSION
 ENV DUNE_VERSION=${DUNE_VERSION}
 
+ARG NUM_VERSION=0
+# or 1.3
+
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
   && eval $(opam env) \
@@ -74,7 +77,7 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam install -y -j 1 opam-depext \
   && opam pin add -n -k version ocamlfind ${OCAMLFIND_VERSION} \
   && opam pin add -n -k version dune ${DUNE_VERSION} \
-  && opam pin add -n -k version num 1.3 \
+  && opam pin add -n -k version num ${NUM_VERSION} \
   && opam install -y -v -j ${NJOBS} ocamlfind dune num \
   && opam clean -a -c -s --logs \
   && opam config list && opam list"]
