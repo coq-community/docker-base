@@ -65,8 +65,11 @@ USER coq
 
 ENV NJOBS="2"
 ENV OPAMPRECISETRACKING="1"
+
 ARG COMPILER
 ENV COMPILER=${COMPILER}
+# TODO Remove the COMPILER_EDGE variable after removing this line:
+# https://github.com/math-comp/math-comp/blob/3728862/Dockerfile#L30
 ARG COMPILER_EDGE
 ENV COMPILER_EDGE=${COMPILER_EDGE}
 
