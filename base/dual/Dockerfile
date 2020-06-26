@@ -1,7 +1,7 @@
 FROM debian:10-slim
-LABEL maintainer="erik@martin-dorel.org"
 
-ENV OPAM_VERSION="2.0.7"
+ARG OPAM_VERSION
+ENV OPAM_VERSION=${OPAM_VERSION}
 
 RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
@@ -58,11 +58,15 @@ WORKDIR /home/coq
 USER coq
 
 ENV NJOBS="2"
-ENV COMPILER="4.05.0"
-ENV COMPILER_EDGE="4.07.1+flambda"
 ENV OPAMPRECISETRACKING="1"
-ENV OCAMLFIND_VERSION="1.8.1"
-ENV DUNE_VERSION="2.5.1"
+ARG COMPILER
+ENV COMPILER=${COMPILER}
+ARG COMPILER_EDGE
+ENV COMPILER_EDGE=${COMPILER_EDGE}
+ARG OCAMLFIND_VERSION
+ENV OCAMLFIND_VERSION=${OCAMLFIND_VERSION}
+ARG DUNE_VERSION
+ENV DUNE_VERSION=${DUNE_VERSION}
 
 RUN ["/bin/bash", "--login", "-c", "set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER_EDGE} --disable-sandboxing \
@@ -91,3 +95,5 @@ RUN ["/bin/bash", "--login", "-c", "set -x \
 ENTRYPOINT ["opam", "exec", "--"]
 
 CMD ["/bin/bash", "--login"]
+
+LABEL maintainer="erik@martin-dorel.org"
