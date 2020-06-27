@@ -19,7 +19,12 @@
 #       - Run 1 job per Dockerfile spec
 #       - Push the image to Docker Hub foreach required tag
 #   - [TODO] Remove the old tags from Docker Hub
-#   - [TODO] Ask to update the README.md
+#   - [TODO] Job advising to update the README.md:
+#     - Upload URL: https://hub.docker.com/repository/docker/user/repo
+#     - Download URL:
+#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/file/_install_ci/share/doc/coq/sphinx/html/index.html
+#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/file/_install_ci/share/doc/coq/pdf/Library.pdf
+#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/raw/_install_ci/share/doc/coq/pdf/Library.pdf?inline=false
 # - [TODO] On scheduled pipelines for master:
 #   - Run relevant jobs above (alpha releases | dev -> nightly build)
 #   - Run verification that the docker-make subtree is up-to-date (once a day)
@@ -27,8 +32,8 @@
 #   - Run relevant jobs for master (taking account --rebuild or so flags)
 #   - TODO Document the procedure to rebuild images
 #
-# - [TODO] CLI command to update using subtree
-# - [TODO] CLI command to create Dockerfile (?)
+# - [TODO] documentation to update docker-keeper using git-subtree
+# - [TODO] documentation suggesting Dockerfile sources
 #
 # - [TODO] docker-base & docker-coq: CONTRIBUTE.md → GitHub PRs
 # - [TODO] docker-keeper-demo: MWE
