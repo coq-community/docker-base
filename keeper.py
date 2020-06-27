@@ -518,11 +518,8 @@ stages:
 # reviewed to avoid leaks of HUB_TOKEN
 .docker-deploy:
   stage: deploy
-  environment:
-    name: deployment
-    url: https://hub.docker.com/r/{var_hub_repo}
   only:
-    - master  # TODO: refine
+    - master
   variables:
     HUB_REPO: "{var_hub_repo}"
     # HUB_USER: # protected variable
