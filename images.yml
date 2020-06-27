@@ -13,7 +13,7 @@ images:
       context: './base'
       dockerfile: './single/Dockerfile'
       args:
-        COMPILER: '{matrix[ocaml][//-/+]}'
+        COMPILER: '{matrix[tag][//-/+]}'
         NUM_VERSION: '1.3'
       tags:
         - tag: '{matrix[tag]}'
@@ -35,7 +35,7 @@ images:
       context: './base'
       dockerfile: './single/Dockerfile'
       args:
-        COMPILER: '{matrix[ocaml]}'
+        COMPILER: '{matrix[tag]}'
         NUM_VERSION: '0'
       tags:
         - tag: '{matrix[tag]}'
