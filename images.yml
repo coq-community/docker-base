@@ -1,4 +1,6 @@
 ---
+base_url: 'https://gitlab.com/coq-community/docker-base'
+active: true
 docker_repo: 'coqorg/base'
 args:
   OPAM_VERSION: '2.0.7'
