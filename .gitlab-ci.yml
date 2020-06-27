@@ -55,6 +55,7 @@ stages:
     name: cytopia/yamllint
     entrypoint: ["/bin/ash", "-c"]
   script:
+    - echo "$FILENAME"
     - yamllint -f colored "$FILENAME"
 
 .python:
@@ -77,8 +78,7 @@ prepare-artifacts:
     - git describe --all --long --abbrev=40 --always --dirty
     - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
   artifacts:
-    name: "docker-keeper"
-    # name: "$CI_JOB_NAME"
+    name: "docker-keeper_$CI_JOB_NAME"
     when: always
     paths:
       - generated/build_data.json
@@ -100,6 +100,7 @@ prepare-config:
     - '"$KEEPER_SUBTREE/keeper.py" generate-config > generated/build.yml'
     # - cat generated/build.yml
   artifacts:
+    name: "docker-keeper_$CI_JOB_NAME"
     when: always
     paths:
       - generated/build.yml
