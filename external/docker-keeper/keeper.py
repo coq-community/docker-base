@@ -141,6 +141,13 @@ def load_spec():
     print_stderr("Loading '%s'..." % images_filename)
     with open(images_filename) as f:
         j = yaml.safe_load(f)
+    if not 'active' in j or not j['active']:
+        print_stderr("""
+WARNING: the 'docker-keeper' tasks are not yet active.
+Please update your %s specification and Dockerfile templates.
+Then, set the option 'active: true' in the %s file."""
+                     % (images_filename, images_filename))
+        exit(1)
     return j
 
 
