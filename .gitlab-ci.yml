@@ -1,0 +1,127 @@
+# Author: Erik Martin-Dorel, 2020
+
+# Design:
+# - docker-keeper: Lint python scripts (allowed to fail?)
+# - On push for all branches:
+#   - Lint images.yml (Use cytopia/yamllint)
+#   - Read images.yml (Use pyyaml)
+#   - Compute the list of images tags foreach item and store it as artifact
+#   - Check that these images tags are disjoint
+# - Compute the list of Dockerfiles and store it as artifact
+#   - [TODO] Lint the Dockerfiles (mentioned in generated/Dockerfiles.json)
+#   - Gen README.md as artifact (Supported tags and respective Dockerfile links)
+#     (cf. https://hub.docker.com/_/debian/) (with GitLab hyperlinks)
+#   - Get the list of remote tags and store it as artifact
+#   - Compute the symmetric difference of tags and store it as artifact
+# - On push for master (protected branch):
+#   - Foreach Dockerfile spec from images.yml (following the list order):
+#     - If one of the associated tags does not exists, or with a --rebuild flag:
+#       - Run 1 job per Dockerfile spec
+#       - Push the image to Docker Hub foreach required tag
+#   - [TODO] Remove the old tags from Docker Hub
+#   - [TODO] Ask to update the README.md
+# - [TODO] On scheduled pipelines for master:
+#   - Run relevant jobs above (alpha releases | dev -> nightly build)
+#   - Run verification that the docker-make subtree is up-to-date (once a day)
+# - [TODO] On manual pipelines:
+#   - Run relevant jobs for master (taking account --rebuild or so flags)
+#   - TODO Document the procedure to rebuild images
+#
+# - [TODO] CLI command to update using subtree
+# - [TODO] CLI command to create Dockerfile (?)
+#
+# - [TODO] docker-base & docker-coq: CONTRIBUTE.md → GitHub PRs
+# - [TODO] docker-keeper-demo: MWE
+# - [TODO] docker-keeper-template: 'active: false', READMEs, link to MWE
+
+# TODO: refactor and invoke:
+# include: 'external/docker-keeper/gitlab-ci-template.yml'
+
+variables:
+  KEEPER_SUBTREE: external/docker-keeper
+
+stages:
+  - lint-src
+  - compile
+  - prepare-ci
+  - lint-ci
+  - trigger-ci
+
+.lint-yaml:
+  dependencies: []  # optional
+  variables:
+    FILENAME: existing-file-name  # to override in child jobs
+  image:
+    name: cytopia/yamllint
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - yamllint -f colored "$FILENAME"
+
+.python:
+  dependencies: []  # optional
+  image: python:3
+  before_script:
+    - pip install --no-cache-dir -r "$KEEPER_SUBTREE/requirements.txt"
+
+lint-images:
+  stage: lint-src
+  extends: .lint-yaml
+  variables:
+    FILENAME: 'images.yml'
+
+prepare-artifacts:
+  stage: compile
+  extends: .python
+  script:
+    - git rev-parse --verify HEAD
+    - git describe --all --long --abbrev=40 --always --dirty
+    - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
+  artifacts:
+    name: "docker-keeper"
+    # name: "$CI_JOB_NAME"
+    when: always
+    paths:
+      - generated/build_data.json
+      - generated/build_data_min.json
+      - generated/remote_tags.json
+      - generated/remote_tags_to_rm.json
+      - generated/Dockerfiles.json
+      - generated/README.md
+    expire_in: 6 months
+  except:
+    - tags
+
+prepare-config:
+  stage: prepare-ci
+  extends: .python
+  dependencies:  # OVERRIDE
+    - prepare-artifacts
+  script:
+    - '"$KEEPER_SUBTREE/keeper.py" generate-config > generated/build.yml'
+    # - cat generated/build.yml
+  artifacts:
+    when: always
+    paths:
+      - generated/build.yml
+    expire_in: 6 months
+  except:
+    - tags
+
+lint-config:
+  stage: lint-ci
+  extends: .lint-yaml
+  dependencies:  # OVERRIDE
+    - prepare-config
+  variables:
+    GIT_STRATEGY: none
+    FILENAME: 'generated/build.yml'
+  except:
+    - tags
+
+trigger-build:
+  stage: trigger-ci
+  only:
+    - master
+  trigger:
+    include: generated/build.yml
+    strategy: depend
