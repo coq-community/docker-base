@@ -124,5 +124,7 @@ trigger-build:
   only:
     - master
   trigger:
-    include: generated/build.yml
+    include:
+      - artifact: generated/build.yml
+        job: prepare-config
     strategy: depend
