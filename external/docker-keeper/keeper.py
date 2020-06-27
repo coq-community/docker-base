@@ -524,7 +524,6 @@ stages:
   only:
     - master  # TODO: refine
   variables:
-    GIT_STRATEGY: none
     HUB_REPO: "{var_hub_repo}"
     # HUB_USER: # protected variable
     # HUB_TOKEN: # protected variable
@@ -532,9 +531,11 @@ stages:
   services:
     - docker:dind
   before_script:
+    - cat /proc/cpuinfo /proc/meminfo
     - echo $0
     - apk add --no-cache bash
     - /usr/bin/env bash --version
+    - pwd
 
 {var_jobs}"""
 
@@ -553,7 +554,7 @@ deploy_{var_job_id}:
       dk_build "{var_context}" "{var_dockerfile}" "{var_one_tag}" {vars_args}
       dk_push "{var_hub_repo}" "{var_one_tag}" {vars_tags}
       dk_logout
-    '
+    ' bash
 """.format(var_context=item['context'],
            var_dockerfile=item['dockerfile'],
            vars_args=('"%s"' % '" "'.join(equalize_args(item['args']))),
