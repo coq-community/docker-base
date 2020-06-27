@@ -37,7 +37,7 @@ dk_push() {
     # rest: tag1 tag2
     for tag; do
         ( set -ex;
-          docker tag "$one_image" "$hub_repo/$tag";
-          docker push "$hub_repo/$tag" )
+          docker tag "$one_image" "$hub_repo:$tag";
+          docker push "$hub_repo:$tag" )
     done
 }
