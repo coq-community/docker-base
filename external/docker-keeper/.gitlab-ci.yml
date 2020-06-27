@@ -20,4 +20,5 @@ test-python:
   stage: test
   extends: .python
   script:
+    - ./keeper.py --version
     - pytest *.py
