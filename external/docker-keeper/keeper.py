@@ -9,18 +9,26 @@
 from bash_formatter import BashLike
 from datetime import datetime
 import copy
+import json
 import requests
+import os
 import sys
+import time
 import yaml
-import json  # debug
+
+debug = False
+output_directory = 'generated'
+images_filename = 'images.yml'
+json_indent = 2
 
 
-debug = True
+def print_stderr(message):
+    print(message, file=sys.stderr, flush=True)
 
 
 def dump(data):
     """Debug"""
-    print(json.dumps(data, indent=4), file=sys.stderr, flush=True)
+    print_stderr(json.dumps(data, indent=json_indent))
 
 
 # def error(msg, flush=True):
@@ -41,9 +49,28 @@ def uniqify(s):
     return list(set(s))
 
 
+def diff_list(l1, l2):
+    """Compute the set-difference (l1 - l2), preserving duplicates."""
+    return list(filter(lambda e: e not in l2, l1))
+
+
+def subset_list(l1, l2):
+    """Check if l1 is included in l2."""
+    return not diff_list(l1, l2)
+
+
 def is_unique(s):
     """Check if the list s has no duplicate."""
     return len(s) == len(set(s))
+
+
+def merge_dict(a, b):
+    """Merge the fields of a and b, the latter overriding the former."""
+    res = copy.deepcopy(a) if a else {}
+    copyb = copy.deepcopy(b) if b else {}
+    for key in copyb:
+        res[key] = copyb[key]
+    return res
 
 
 def check_string(value, ident=None):
@@ -74,7 +101,7 @@ def naive_url_encode(name):
 
 def get_url(url, headers=None, query=None):
     """Argument query can be 'commit.id'."""
-    print('GET %s\n' % url, file=sys.stderr, flush=True)
+    print_stderr('GET %s\n' % url)
     response = requests.get(url, headers=headers, params=None)
     if not response:
         error("Error!\nCode: %d\nText: %s"
@@ -110,8 +137,8 @@ def get_commit(commit_api):
 
 
 def load_spec():
-    """Parse the 'images.yml' file and return a dict."""
-    images_filename = 'images.yml'
+    """Parse the YAML file and return a dict."""
+    print_stderr("Loading '%s'..." % images_filename)
     with open(images_filename) as f:
         j = yaml.safe_load(f)
     return j
@@ -194,12 +221,14 @@ def get_list_dict_dockerfile_matrix_tags_args(json):
     images = json['images']
     for item in images:
         list_matrix = product_build_matrix(item['matrix'])
-        dfile = item['dockerfile'] if 'dockerfile' in item else 'Dockerfile'
-        check_filename(dfile)
+        if 'dockerfile' in item['build']:
+            dfile = check_trim_relative_path(item['build']['dockerfile'])
+        else:
+            dfile = 'Dockerfile'
         ctxt = check_trim_relative_path(item['build']['context'])
         dockerfile = '%s/%s' % (ctxt, dfile)
         raw_tags = item['build']['tags']
-        raw_args = item['build']['args']
+        raw_args = merge_dict(json['args'], item['build']['args'])
         for matrix in list_matrix:
             tags = []
             for tag_item in raw_tags:
@@ -225,28 +254,218 @@ def get_list_dict_dockerfile_matrix_tags_args(json):
     return res
 
 
+def gitlab_build_params_pagination(page, per_page):
+    """https://docs.gitlab.com/ce/api/README.html#pagination"""
+    return {
+        'page': str(page),
+        'per_page': str(per_page)
+    }
+
+
+def hub_build_params_pagination(page, per_page):
+    return {
+        'page': str(page),
+        'page_size': str(per_page)
+    }
+
+
+def hub_lambda_list(j):
+    """https://registry.hub.docker.com/v2/repositories/library/debian/tags"""
+    return list(map(lambda e: e['name'], j['results']))
+
+
+def get_list_paginated(url, headers, params, lambda_list, max_per_sec=5):
+    """Generic wrapper to handle GET requests with pagination.
+
+    If the response is a JSON list, use lambda_list=(lambda l: l).
+
+    REM: for https://registry.hub.docker.com/v2/repositories/_/_/tags,
+    one could use the "next" field to guess the following page."""
+    assert isinstance(max_per_sec, int)
+    assert max_per_sec > 0
+    assert max_per_sec <= 10
+    per_page = 50  # max allowed (by gitlab.com & hub.docker.com): 100
+    page = 0
+    allj = []
+    while(True):
+        page += 1
+        if page % max_per_sec == 0:
+            time.sleep(1.1)
+        page_params = hub_build_params_pagination(page, per_page)
+        all_params = merge_dict(params, page_params)
+        print("GET %s\n  # page: %d"
+              % (url, page), file=sys.stderr, flush=True)
+        response = requests.get(url, headers=headers, params=all_params)
+        if not response:
+            error("Error!\nCode: %d\nText: %s"
+                  % (response.status_code, response.text))
+        j = lambda_list(response.json())
+        if not isinstance(j, list):
+            error("Error: not JSON list\nText: %s"
+                  % response.text)
+        if j:
+            allj += j
+        else:
+            break
+    return allj
+
+
+def get_remote_tags(spec):
+    repo = spec['docker_repo']
+    check_string(repo)
+    return get_list_paginated(
+        'https://registry.hub.docker.com/v2/repositories/%s/tags' % repo,
+        None, None, hub_lambda_list)
+
+
+def minimal_rebuild(build_tags, remote_tags):
+    def pred(item):
+        return not subset_list(item['tags'], remote_tags)
+    return list(filter(pred, build_tags))
+
+
+def to_rm(all_tags, remote_tags):
+    return diff_list(remote_tags, all_tags)
+
+
+def mkdir_dirname(filename):
+    """Python3 equivalent to 'mkdir -p $(dirname $filename)"'."""
+    os.makedirs(os.path.dirname(filename), mode=0o755, exist_ok=True)
+
+
+def fullpath(filename):
+    """Get path of filename in output_directory/."""
+    return os.path.join(output_directory, filename)
+
+
+def write_json_artifact(j, basename):
+    filename = fullpath(basename)
+    print_stderr("Generating '%s'..." % filename)
+    mkdir_dirname(filename)
+    with open(filename, 'w') as f:
+        json.dump(j, f, indent=json_indent)
+
+
+def write_build_data(build_data):
+    write_json_artifact(build_data, 'build_data.json')
+
+
+def write_build_data_min(build_data_min):
+    write_json_artifact(build_data_min, 'build_data_min.json')
+
+
+def write_remote_tags(remote_tags):
+    write_json_artifact(remote_tags, 'remote_tags.json')
+
+
+def write_remote_tags_to_rm(remote_tags_to_rm):
+    write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
+
+
 def write_list_dockerfile(seq):
     """To be used on the value of get_list_dict_dockerfile_matrix_tags_args."""
     dockerfiles = uniqify(map(lambda e: e['path'], seq))
-    print(dockerfiles)
+    write_json_artifact(dockerfiles, 'Dockerfiles.json')
 
 
-def write_check_tags(seq):
+def write_readme(base_url, build_data):
+    """Read README.md and replace <!-- tags --> with a list of images
+
+    with https://gitlab.com/foo/bar/blob/master/Dockerfile hyperlinks.
+    """
+    pattern = '<!-- tags -->'
+    check_string(base_url)
+    if base_url[-1] == '/':
+        base_url = base_url[:-1]
+
+    def readme_image(item):
+        return '-	[`{tags}`]({url})'.format(
+            tags=('`, `'.join(item['tags'])),
+            url=('%s/blob/master/%s' % (base_url, item['path'])))
+
+    print_stderr("Reading the template 'README.md'...")
+    with open('README.md', 'r') as f:
+        template = f.read()
+
+    tags = ('# Supported tags and respective `Dockerfile` links\n\n%s'
+            % '\n'.join(map(readme_image, build_data)))
+
+    readme = template.replace(pattern, tags)
+
+    filename = fullpath('README.md')
+    print_stderr("Generating '%s'..." % filename)
+    mkdir_dirname(filename)
+    with open(filename, 'w') as f:
+        f.write(readme)
+
+
+def get_check_tags(seq):
     """To be used on the value of get_list_dict_dockerfile_matrix_tags_args."""
     res = []
     for e in seq:
         res.extend(e['tags'])
-    print(res)
     if is_unique(res):
-        print("OK: no duplicate tag found.", file=sys.stderr, flush=True)
+        print_stderr("OK: no duplicate tag found.")
     else:
         error("Error: there are some tags duplicates.")
+    return res
+
+
+def usage():
+    print("""# docker-keeper
+
+This python script is devised to help maintain Docker Hub repositories
+of stable and dev (nightly build) Docker images from a YAML-specified,
+single-branch GitLab repository - typically created as a fork of the
+following repo: <https://gitlab.com/erikmd/docker-keeper-template>.
+
+This script is meant to be run by GitLab CI.
+
+## Syntax
+
+```
+keeper.py write-artifacts
+    Generate artifacts in the '%s' directory.
+    This requires having file '%s' in the current working directory.
+
+keeper.py --version
+    Print the script version.
+
+keeper.py --help
+    Print this documentation.
+```
+
+## Usage
+
+* Fork <https://gitlab.com/erikmd/docker-keeper-template>.
+
+* Follow the instructions of the README.md in your fork."""
+          % (output_directory, images_filename))
 
 
 def main(args):
-    list_dict = get_list_dict_dockerfile_matrix_tags_args(load_spec())
-    write_list_dockerfile(list_dict)
-    write_check_tags(list_dict)
+    if args == ['--version']:
+        filedir = os.path.dirname(__file__)
+        with open(os.path.join(filedir, 'VERSION'), 'r') as f:
+            version = f.read().strip()
+        print(version)
+        exit(0)
+    # elif args == ['--remote-version']:
+    elif args == ['write-artifacts']:
+        spec = load_spec()
+        build_data = get_list_dict_dockerfile_matrix_tags_args(spec)
+        all_tags = get_check_tags(build_data)
+        remote_tags = get_remote_tags(spec)
+        build_data_min = minimal_rebuild(build_data, remote_tags)
+        remote_tags_to_rm = to_rm(all_tags, remote_tags)
+        write_build_data(build_data)
+        write_build_data_min(build_data_min)
+        write_remote_tags(remote_tags)
+        write_remote_tags_to_rm(remote_tags_to_rm)
+        write_list_dockerfile(build_data)
+        write_readme(spec['base_url'], build_data)
+    else:
+        usage()
 
 
 ###############################################################################
@@ -268,10 +487,10 @@ def test_get_commit():
 def shouldfail(lam):
     try:
         res = lam()
-        print("Wrong outcome: '%s'" % res, file=sys.stderr, flush=True)
+        print_stderr("Wrong outcome: '%s'" % res)
         assert False
     except Error:
-        print('OK', file=sys.stderr, flush=True)
+        print_stderr('OK')
 
 
 def test_check_trim_relative_path():
@@ -296,6 +515,29 @@ def test_is_unique():
     assert not is_unique(s)
     s = uniqify(s)
     assert is_unique(s)
+
+
+def test_merge_dict():
+    foo = {'a': 1, 'c': 2}
+    bar = {'b': 3, 'c': 4}
+    foobar = merge_dict(foo, bar)
+    assert foobar == {'a': 1, 'b': 3, 'c': 4}
+
+
+def test_diff_list():
+    l1 = [1, 2, 4, 2, 5, 4]
+    l2 = [3, 1, 2]
+    assert diff_list(l1, l2) == [4, 5, 4]
+
+
+def test_subset_list():
+    l2 = [2, 3]
+    l1 = [2]
+    l0 = [3, 4, 5]
+    l3 = [2, 3, 5]
+    assert subset_list(l2, l3)
+    assert not subset_list(l2, l1)
+    assert not subset_list(l2, l0)
 
 
 if __name__ == "__main__":
