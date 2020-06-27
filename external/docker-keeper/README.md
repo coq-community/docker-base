@@ -17,6 +17,9 @@ keeper.py write-artifacts
 keeper.py --version
     Print the script version.
 
+keeper.py --upstream-version
+    Print the upstream version from https://gitlab.com/erikmd/docker-keeper
+
 keeper.py --help
     Print this documentation.
 ```

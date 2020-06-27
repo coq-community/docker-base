@@ -8,6 +8,7 @@
 
 from bash_formatter import BashLike
 from datetime import datetime
+import base64
 import copy
 import json
 import requests
@@ -20,6 +21,8 @@ debug = False
 output_directory = 'generated'
 images_filename = 'images.yml'
 json_indent = 2
+upstream_project = 'erikmd/docker-keeper'
+upstream_url = 'https://gitlab.com/%s' % upstream_project
 
 
 def print_stderr(message):
@@ -99,21 +102,27 @@ def naive_url_encode(name):
     return name.replace('/', '%2F')
 
 
-def get_url(url, headers=None, query=None):
-    """Argument query can be 'commit.id'."""
+def gitlab_lambda_query_sha1(response):
+    """Return the "commit.id" field from 'response.json()'."""
+    return response.json()['commit']['id']
+
+
+def lambda_query_text(response):
+    return response.text
+
+
+def get_url(url, headers=None, params=None, lambda_query=(lambda r: r)):
+    """Some examples of lambda_query:
+
+        - gitlab_lambda_query_sha1
+        - lambda_query_text
+    """
     print_stderr('GET %s\n' % url)
-    response = requests.get(url, headers=headers, params=None)
+    response = requests.get(url, headers=headers, params=params)
     if not response:
         error("Error!\nCode: %d\nText: %s"
               % (response.status_code, response.text))
-    if not query:
-        return response.text
-    else:
-        response = response.json()
-        jpath = query.split('.')
-        for step in jpath:
-            response = response[step]
-        return response
+    return lambda_query(response)
 
 
 def get_commit(commit_api):
@@ -124,16 +133,16 @@ def get_commit(commit_api):
     if fetcher == 'github':
         url = 'https://api.github.com/repos/%s/commits/%s' % (repo, branch)
         headers = {"Accept": "application/vnd.github.v3.sha"}
-        query = None
+        lambda_query = lambda_query_text
     elif fetcher == 'gitlab':
         # https://gitlab.com/help/api/branches.md#get-single-repository-branch
         url = ('https://gitlab.com/api/v4/projects/%s/repository/branches/%s'
                % (naive_url_encode(repo), naive_url_encode(branch)))
         headers = None
-        query = 'commit.id'
+        lambda_query = gitlab_lambda_query_sha1
     else:
         error("Error: do not support 'fetcher: %s'" % fetcher)
-    return get_url(url, headers, query)
+    return get_url(url, headers, None, lambda_query)
 
 
 def load_spec():
@@ -141,7 +150,7 @@ def load_spec():
     print_stderr("Loading '%s'..." % images_filename)
     with open(images_filename) as f:
         j = yaml.safe_load(f)
-    if not 'active' in j or not j['active']:
+    if 'active' not in j or not j['active']:
         print_stderr("""
 WARNING: the 'docker-keeper' tasks are not yet active.
 Please update your %s specification and Dockerfile templates.
@@ -223,7 +232,14 @@ def eval_if(raw_condition, matrix):
 
 
 def get_list_dict_dockerfile_matrix_tags_args(json):
-    """Get [{"path": "Dockerfile", "matrix": …, "tags": …, "args": …}, …]."""
+    """Get list of dicts containing the following keys:
+       - "context": "…"
+       - "dockerfile": "…/Dockerfile"
+       - "path": "…/…/Dockerfile"
+       - "matrix": […]
+       - "tags": […]
+       - "args": […]
+    """
     res = []
     images = json['images']
     for item in images:
@@ -418,6 +434,24 @@ def get_check_tags(seq):
     return res
 
 
+def get_version():
+    filedir = os.path.dirname(__file__)
+    with open(os.path.join(filedir, 'VERSION'), 'r') as f:
+        version = f.read().strip()
+    return version
+
+
+def get_upstream_version():
+    url = ('https://gitlab.com/api/v4/projects/%s/repository/files/VERSION'
+           % naive_url_encode(upstream_project))
+
+    def lambda_query_content(response):
+        return (base64.b64decode(response.json()['content'])
+                .decode('UTF-8').rstrip())
+
+    return get_url(url, None, {"ref": "master"}, lambda_query_content)
+
+
 def usage():
     print("""# docker-keeper
 
@@ -438,6 +472,9 @@ keeper.py write-artifacts
 keeper.py --version
     Print the script version.
 
+keeper.py --upstream-version
+    Print the upstream version from %s
+
 keeper.py --help
     Print this documentation.
 ```
@@ -447,17 +484,15 @@ keeper.py --help
 * Fork <https://gitlab.com/erikmd/docker-keeper-template>.
 
 * Follow the instructions of the README.md in your fork."""
-          % (output_directory, images_filename))
+          % (output_directory, images_filename, upstream_url))
 
 
 def main(args):
     if args == ['--version']:
-        filedir = os.path.dirname(__file__)
-        with open(os.path.join(filedir, 'VERSION'), 'r') as f:
-            version = f.read().strip()
-        print(version)
+        print(get_version())
         exit(0)
-    # elif args == ['--remote-version']:
+    elif args == ['--upstream-version']:
+        print(get_upstream_version())
     elif args == ['write-artifacts']:
         spec = load_spec()
         build_data = get_list_dict_dockerfile_matrix_tags_args(spec)
@@ -501,6 +536,7 @@ def shouldfail(lam):
 
 
 def test_check_trim_relative_path():
+    assert check_trim_relative_path('.') == '.'
     assert check_trim_relative_path('./foo/bar') == 'foo/bar'
     assert check_trim_relative_path('bar/baz') == 'bar/baz'
     shouldfail(lambda: check_trim_relative_path('/etc'))
