@@ -21,11 +21,13 @@ dk_build() {
     local one_image="$3"
     shift 3
     # rest: VAR1=value1 VAR2=value2
-    local args=(-f "$dockerfile" --pull -t "$one_image")
+    context="${context%/}"
+    local args=(-f "$context/$dockerfile" --pull -t "$one_image")
     for arg; do
         args[${#args[@]}]="--build-arg=$arg"
     done
-    docker build "${args[@]}" "$context"
+    ( set -ex;
+      docker build "${args[@]}" "$context" )
 }
 
 dk_push() {
