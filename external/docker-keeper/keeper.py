@@ -248,8 +248,8 @@ def get_list_dict_dockerfile_matrix_tags_args(json):
             dfile = check_trim_relative_path(item['build']['dockerfile'])
         else:
             dfile = 'Dockerfile'
-        ctxt = check_trim_relative_path(item['build']['context'])
-        dockerfile = '%s/%s' % (ctxt, dfile)
+        context = check_trim_relative_path(item['build']['context'])
+        path = '%s/%s' % (context, dfile)
         raw_tags = item['build']['tags']
         raw_args = merge_dict(json['args'], item['build']['args'])
         for matrix in list_matrix:
@@ -269,8 +269,9 @@ def get_list_dict_dockerfile_matrix_tags_args(json):
             for arg_key in raw_args:
                 arg_template = raw_args[arg_key]
                 args[arg_key] = eval_bashlike(arg_template, matrix, defaults)
-            newitem = {"path": dockerfile, "matrix": matrix,
-                       "tags": tags, "args": args}
+            newitem = {"context": context, "dockerfile": dfile,
+                       "path": path,
+                       "matrix": matrix, "tags": tags, "args": args}
             res.append(newitem)
     if debug:
         dump(res)
@@ -351,6 +352,11 @@ def to_rm(all_tags, remote_tags):
     return diff_list(remote_tags, all_tags)
 
 
+def get_script_directory():
+    """$(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd) in Python."""
+    return os.path.dirname(__file__)
+
+
 def mkdir_dirname(filename):
     """Python3 equivalent to 'mkdir -p $(dirname $filename)"'."""
     os.makedirs(os.path.dirname(filename), mode=0o755, exist_ok=True)
@@ -389,6 +395,22 @@ def write_list_dockerfile(seq):
     """To be used on the value of get_list_dict_dockerfile_matrix_tags_args."""
     dockerfiles = uniqify(map(lambda e: e['path'], seq))
     write_json_artifact(dockerfiles, 'Dockerfiles.json')
+
+
+def read_json_artifact(basename):
+    filename = fullpath(basename)
+    print_stderr("Reading '%s'..." % filename)
+    with open(filename, 'r') as json_data:
+        j = json.load(json_data)
+    return j
+
+
+def read_build_data():
+    return read_json_artifact('build_data.json')
+
+
+def read_build_data_min():
+    return read_json_artifact('build_data_min.json')
 
 
 def write_readme(base_url, build_data):
@@ -435,8 +457,7 @@ def get_check_tags(seq):
 
 
 def get_version():
-    filedir = os.path.dirname(__file__)
-    with open(os.path.join(filedir, 'VERSION'), 'r') as f:
+    with open(os.path.join(get_script_directory(), 'VERSION'), 'r') as f:
         version = f.read().strip()
     return version
 
@@ -450,6 +471,96 @@ def get_upstream_version():
                 .decode('UTF-8').rstrip())
 
     return get_url(url, None, {"ref": "master"}, lambda_query_content)
+
+
+def equalize_args(record):
+    """{"VAR1": "value1", "VAR2": "value2"} → ['VAR1=value1', 'VAR2=value2']"""
+    res = []
+    for key in record:
+        res.append("%s=%s" % (key, record[key]))
+    return res
+
+
+def generate_config(docker_repo, rebuild=False):
+    if rebuild:
+        data = read_build_data()
+    else:
+        data = read_build_data_min()
+
+    if not data:
+        return """# Automatically generated GitLab CI config; do not edit.
+
+stages:
+  - build
+
+noop:
+  stage: build
+  image: alpine:latest
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - echo "No image to rebuild."
+  only:
+    - master
+"""
+
+    yamlstr_init = """# Automatically generated GitLab CI config; do not edit.
+
+stages:
+  - deploy
+  - remove
+
+# Changes below (or jobs extending .docker-deploy) should be carefully
+# reviewed to avoid leaks of HUB_TOKEN
+.docker-deploy:
+  stage: deploy
+  environment:
+    name: deployment
+    url: https://hub.docker.com/r/{var_hub_repo}
+  only:
+    - master # TODO: refine
+  variables:
+    GIT_STRATEGY: none
+    HUB_REPO: "{var_hub_repo}"
+    # HUB_USER: # protected variable
+    # HUB_TOKEN: # protected variable
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo $0
+    - apk add --no-cache bash
+    - /usr/bin/env bash --version
+
+{var_jobs}"""
+
+    yamlstr_jobs = ''
+    job_id = 0
+    for item in data:
+        job_id += 1
+        yamlstr_jobs += """
+deploy_{var_job_id}:
+  extends: .docker-deploy
+  script: |
+    /usr/bin/env bash -e -c '
+      echo $0
+      . "{var_keeper_subtree}/gitlab_functions.sh"
+      dk_login
+      dk_build "{var_context}" "{var_dockerfile}" "{var_one_tag}" {vars_args}
+      dk_push "{var_hub_repo}" "{var_one_tag}" {vars_tags}
+      dk_logout
+    '
+""".format(var_context=item['context'],
+           var_dockerfile=item['dockerfile'],
+           vars_args=('"%s"' % '" "'.join(equalize_args(item['args']))),
+           vars_tags=('"%s"' % '" "'.join(item['tags'])),
+           var_keeper_subtree=get_script_directory(),
+           var_hub_repo=docker_repo,
+           var_one_tag=("image_%d" % job_id),
+           var_job_id=job_id)
+
+    return yamlstr_init.format(var_hub_repo=docker_repo,
+                               var_jobs=yamlstr_jobs)
 
 
 def usage():
@@ -468,6 +579,18 @@ This script is meant to be run by GitLab CI.
 keeper.py write-artifacts
     Generate artifacts in the '%s' directory.
     This requires having file '%s' in the current working directory.
+
+keeper.py generate-config
+    Print a GitLab CI YAML config to standard output (minimal builds).
+    This requires files:
+      - generated/build_data_min.json
+      - generated/remote_tags_to_rm.json
+
+keeper.py generate-config --rebuild
+    Print a GitLab CI YAML config to standard output (rebuild everything).
+    This requires files:
+      - generated/build_data.json
+      - generated/remote_tags_to_rm.json
 
 keeper.py --version
     Print the script version.
@@ -506,6 +629,12 @@ def main(args):
         write_remote_tags_to_rm(remote_tags_to_rm)
         write_list_dockerfile(build_data)
         write_readme(spec['base_url'], build_data)
+    elif args == ['generate-config']:
+        spec = load_spec()  # could be avoided by writing yet another .json…
+        print(generate_config(spec['docker_repo']))
+    elif args == ['generate-config', '--rebuild']:
+        spec = load_spec()  # could be avoided by writing yet another .json…
+        print(generate_config(spec['docker_repo'], rebuild=True))
     else:
         usage()
 
@@ -581,6 +710,11 @@ def test_subset_list():
     assert subset_list(l2, l3)
     assert not subset_list(l2, l1)
     assert not subset_list(l2, l0)
+
+
+def test_equalize_args():
+    assert (equalize_args({"VAR1": "value1", "VAR2": "value2"}) ==
+            ['VAR1=value1', 'VAR2=value2'])
 
 
 if __name__ == "__main__":
