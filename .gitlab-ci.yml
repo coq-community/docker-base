@@ -18,13 +18,14 @@
 #     - If one of the associated tags does not exists, or with a --rebuild flag:
 #       - Run 1 job per Dockerfile spec
 #       - Push the image to Docker Hub foreach required tag
-#   - [TODO] Remove the old tags from Docker Hub
-#   - [TODO] Job advising to update the README.md:
+#   - Document how to Remove the old tags from Docker Hub
+#     (see also https://github.com/docker/roadmap/issues/115)
+#   - Document how to Update the README.md
 #     - Upload URL: https://hub.docker.com/repository/docker/user/repo
 #     - Download URL:
-#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/file/_install_ci/share/doc/coq/sphinx/html/index.html
-#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/file/_install_ci/share/doc/coq/pdf/Library.pdf
-#       - https://gitlab.com/coq/coq/-/jobs/614298729/artifacts/raw/_install_ci/share/doc/coq/pdf/Library.pdf?inline=false
+#       - $CI_JOB_URL = https://gitlab.com/coq/coq/-/jobs/$CI_JOB_ID
+#       - $CI_JOB_URL/artifacts/file/generated/README.md
+#       - $CI_JOB_URL/artifacts/raw/generated/README.md?inline=false
 # - [TODO] On scheduled pipelines for master:
 #   - Run relevant jobs above (alpha releases | dev -> nightly build)
 #   - Run verification that the docker-make subtree is up-to-date (once a day)
@@ -51,6 +52,7 @@ stages:
   - prepare-ci
   - lint-ci
   - trigger-ci
+  - notify
 
 .lint-yaml:
   dependencies: []  # optional
@@ -83,6 +85,7 @@ prepare-artifacts:
     - git rev-parse --verify HEAD
     - git describe --all --long --abbrev=40 --always --dirty
     - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
+    - echo "$CI_JOB_URL" > generated/CI_JOB_URL.txt
   artifacts:
     name: "docker-keeper_$CI_JOB_NAME"
     when: always
@@ -93,6 +96,8 @@ prepare-artifacts:
       - generated/remote_tags_to_rm.json
       - generated/Dockerfiles.txt
       - generated/README.md
+      - generated/docker_repo.txt
+      - generated/CI_JOB_URL.txt
     expire_in: 6 months
   except:
     - tags
@@ -148,3 +153,30 @@ trigger-build:
       - artifact: generated/build.yml
         job: prepare-config
     strategy: depend
+
+debrief:
+  stage: notify
+  dependencies:
+    - prepare-artifacts
+  image: alpine:latest
+  variables:
+    GIT_STRATEGY: none
+  except:
+    - tags
+  script: |
+    v_CI_JOB_URL=$(cat generated/CI_JOB_URL.txt)
+    v_docker_repo=$(cat generated/docker_repo.txt)
+    cat <<EOF
+    End of the pipeline.
+
+    Please go to https://hub.docker.com/repository/docker/${v_docker_repo}/tags
+    and remove manually the extraneous tags mentioned in:
+    ${v_CI_JOB_URL}/artifacts/file/generated/remote_tags_to_rm.json
+
+    Then go to https://hub.docker.com/repository/docker/${v_docker_repo}/general
+    and update manually the README from:
+    ${v_CI_JOB_URL}/artifacts/raw/generated/README.md?inline=false
+
+    (* Note: both tasks cannot be automated yet, until
+       https://github.com/docker/roadmap/issues/115 is implemented. *)
+    EOF
