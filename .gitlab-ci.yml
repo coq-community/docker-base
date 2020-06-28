@@ -128,10 +128,10 @@ lint-dockerfiles:
   image:
     name: hadolint/hadolint:latest-alpine
     entrypoint: ["/bin/ash", "-c"]
-  script:
-    - hadolint --version
-    - "cat generated/Dockerfiles.txt | tr '\n' '\0' | xargs -0 -n1 hadolint"
   allow_failure: true
+  script: |
+    hadolint --version
+    cat generated/Dockerfiles.txt | tr '\n' '\0' | xargs -0 -n1 hadolint
 
 lint-config:
   stage: lint-ci
