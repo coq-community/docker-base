@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: lint
-
 dk_login() {
     if [ -n "${HUB_USER}" ]; then
         echo "${HUB_TOKEN}" | docker login -u "${HUB_USER}" --password-stdin
