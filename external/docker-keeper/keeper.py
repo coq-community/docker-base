@@ -397,19 +397,28 @@ def write_remote_tags_to_rm(remote_tags_to_rm):
     write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
 
 
-def write_list_text_artifact(seq, basename):
-    check_list(seq)
+def write_text_artifact(text, basename):
     filename = fullpath(basename)
     print_stderr("Generating '%s'..." % filename)
     mkdir_dirname(filename)
     with open(filename, 'w') as f:
-        f.write('\n'.join(seq) + '\n')
+        f.write(text)
+
+
+def write_list_text_artifact(seq, basename):
+    check_list(seq)
+    write_text_artifact('\n'.join(seq) + '\n', basename)
 
 
 def write_list_dockerfile(seq):
     """To be used on the value of get_list_dict_dockerfile_matrix_tags_args."""
     dockerfiles = uniqify(map(lambda e: e['path'], seq))
     write_list_text_artifact(dockerfiles, 'Dockerfiles.txt')
+
+
+def write_docker_repo(spec):
+    repo = spec['docker_repo'] + '\n'
+    write_text_artifact(repo, 'docker_repo.txt')
 
 
 def read_json_artifact(basename):
@@ -646,6 +655,7 @@ def main(args):
         write_remote_tags_to_rm(remote_tags_to_rm)
         write_list_dockerfile(build_data)
         write_readme(spec['base_url'], build_data)
+        write_docker_repo(spec)
     elif args == ['generate-config']:
         spec = load_spec()  # could be avoided by writing yet another .json…
         print(generate_config(spec['docker_repo']))
