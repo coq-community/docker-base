@@ -2,13 +2,16 @@ FROM debian:10-slim
 
 # This 'bare' image does not have any OCaml compiler Docker layer:
 # * it keeps all other layers (APT packages, OPAM 2.0, etc.)
-# * it also keeps some env. variables (NJOBS, OPAMPRECISETRACKING...)
+# * it also keeps some env. variables (OPAM_VERSION, NJOBS, OPAMPRECISETRACKING)
 # * it can be used to build children images from coqorg/coq by multi-stage build
 #   and copy the .opam folder in the very end.
 
 ARG OPAM_VERSION
 ENV OPAM_VERSION=${OPAM_VERSION}
 
+SHELL ["/bin/bash", "--login", "-o", "pipefail", "-c"]
+
+# hadolint ignore=DL3008
 RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
     autoconf \
@@ -31,15 +34,14 @@ RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
     unzip \
   && [ -n "${OPAM_VERSION}" ] \
   && binary="opam-${OPAM_VERSION}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
-  && cd /tmp \
-  && curl -fSOL https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary} \
-  && curl -fSOL https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc \
+  && curl -fSL -o "/tmp/${binary}" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}" \
+  && curl -fSL -o "/tmp/${binary}.asc" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc" \
   && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --batch --import \
-  && gpg --batch --verify ${binary}.asc ${binary} \
+  && gpg --batch --verify "/tmp/${binary}.asc" "/tmp/${binary}" \
   && set -x \
-  && mv ${binary} /usr/local/bin/opam \
+  && mv "/tmp/${binary}" /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
-  && rm -f ${binary}.asc \
+  && rm -f "/tmp/${binary}.asc" \
   && rm -fr /root/.gnupg \
   && DEBIAN_FRONTEND=noninteractive apt-get purge -y -q --auto-remove gnupg \
   && apt-get clean \
@@ -78,3 +80,7 @@ ENTRYPOINT ["opam", "exec", "--"]
 CMD ["/bin/bash", "--login"]
 
 LABEL maintainer="erik@martin-dorel.org"
+
+# Restore default shell to fully preserve backward compatibility
+SHELL ["/bin/sh", "-c"]
+# Still, we may remove this line later on.
