@@ -79,6 +79,7 @@ prepare-artifacts:
   stage: compile
   extends: .python
   script:
+    - apk add --no-cache git
     - git rev-parse --verify HEAD
     - git describe --all --long --abbrev=40 --always --dirty
     - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
