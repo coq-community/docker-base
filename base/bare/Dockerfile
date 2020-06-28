@@ -12,7 +12,9 @@ ENV OPAM_VERSION=${OPAM_VERSION}
 SHELL ["/bin/bash", "--login", "-o", "pipefail", "-c"]
 
 # hadolint ignore=DL3008
-RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
+RUN cat /proc/cpuinfo /proc/meminfo \
+  && [ -n "${OPAM_VERSION}" ] \
+  && apt-get update -y -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends \
     autoconf \
     automake \
@@ -32,13 +34,12 @@ RUN cat /proc/cpuinfo /proc/meminfo; apt-get update -y -q \
     sudo \
     time \
     unzip \
-  && [ -n "${OPAM_VERSION}" ] \
   && binary="opam-${OPAM_VERSION}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
+  && set -x \
   && curl -fSL -o "/tmp/${binary}" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}" \
   && curl -fSL -o "/tmp/${binary}.asc" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc" \
   && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --batch --import \
   && gpg --batch --verify "/tmp/${binary}.asc" "/tmp/${binary}" \
-  && set -x \
   && mv "/tmp/${binary}" /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
   && rm -f "/tmp/${binary}.asc" \
