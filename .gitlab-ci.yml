@@ -1,7 +1,7 @@
 # Author: Erik Martin-Dorel, 2020
 
 # Design:
-# - docker-keeper: Lint python scripts (allowed to fail?)
+# - docker-keeper: Lint python scripts (Use flake8)
 # - On push for all branches:
 #   - Lint images.yml (Use cytopia/yamllint)
 #   - Read images.yml (Use pyyaml)
@@ -65,7 +65,7 @@ stages:
 
 .python:
   dependencies: []  # optional
-  image: python:3
+  image: python:3-alpine
   before_script:
     - pip install --no-cache-dir -r "$KEEPER_SUBTREE/requirements.txt"
 
