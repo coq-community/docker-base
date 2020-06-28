@@ -22,7 +22,7 @@ lint-script:
     name: koalaman/shellcheck-alpine:stable
     entrypoint: ["/bin/ash", "-c"]
   script:
-    - shellcheck --color=always gitlab_functions.sh
+    - shellcheck --color=always *.sh
 
 test-python:
   stage: test

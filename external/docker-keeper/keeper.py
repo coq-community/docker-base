@@ -48,8 +48,8 @@ def error(msg):
 
 
 def uniqify(s):
-    """Remove duplicates, without preserving the elements order."""
-    return list(set(s))
+    """Remove duplicates and sort the result list."""
+    return sorted(set(s))
 
 
 def diff_list(l1, l2):
@@ -84,6 +84,14 @@ def check_string(value, ident=None):
         else:
             error("Error: expecting a string value, but was given '%s'."
                   % value)
+
+
+def check_list(value, text=None):
+    if not isinstance(value, list):
+        if not text:
+            text = str(value)
+        error("Error: not (JSON) list\nText: %s"
+              % text)
 
 
 def eval_bashlike(template, matrix, defaults=None):
@@ -324,9 +332,7 @@ def get_list_paginated(url, headers, params, lambda_list, max_per_sec=5):
             error("Error!\nCode: %d\nText: %s"
                   % (response.status_code, response.text))
         j = lambda_list(response.json())
-        if not isinstance(j, list):
-            error("Error: not JSON list\nText: %s"
-                  % response.text)
+        check_list(j, text=response.text)
         if j:
             allj += j
         else:
@@ -391,10 +397,19 @@ def write_remote_tags_to_rm(remote_tags_to_rm):
     write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
 
 
+def write_list_text_artifact(seq, basename):
+    check_list(seq)
+    filename = fullpath(basename)
+    print_stderr("Generating '%s'..." % filename)
+    mkdir_dirname(filename)
+    with open(filename, 'w') as f:
+        f.write('\n'.join(seq) + '\n')
+
+
 def write_list_dockerfile(seq):
     """To be used on the value of get_list_dict_dockerfile_matrix_tags_args."""
     dockerfiles = uniqify(map(lambda e: e['path'], seq))
-    write_json_artifact(dockerfiles, 'Dockerfiles.json')
+    write_list_text_artifact(dockerfiles, 'Dockerfiles.txt')
 
 
 def read_json_artifact(basename):
@@ -689,6 +704,10 @@ def test_is_unique():
     assert not is_unique(s)
     s = uniqify(s)
     assert is_unique(s)
+
+
+def test_uniqify():
+    assert uniqify([1, 2, 4, 0, 4]) == [0, 1, 2, 4]
 
 
 def test_merge_dict():
