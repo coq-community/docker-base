@@ -8,7 +8,7 @@
 #   - Compute the list of images tags foreach item and store it as artifact
 #   - Check that these images tags are disjoint
 # - Compute the list of Dockerfiles and store it as artifact
-#   - [TODO] Lint the Dockerfiles (mentioned in generated/Dockerfiles.json)
+#   - Lint the Dockerfiles (mentioned in generated/Dockerfiles.txt)
 #   - Gen README.md as artifact (Supported tags and respective Dockerfile links)
 #     (cf. https://hub.docker.com/_/debian/) (with GitLab hyperlinks)
 #   - Get the list of remote tags and store it as artifact
@@ -91,7 +91,7 @@ prepare-artifacts:
       - generated/build_data_min.json
       - generated/remote_tags.json
       - generated/remote_tags_to_rm.json
-      - generated/Dockerfiles.json
+      - generated/Dockerfiles.txt
       - generated/README.md
     expire_in: 6 months
   except:
@@ -113,6 +113,20 @@ prepare-config:
     expire_in: 6 months
   except:
     - tags
+
+lint-dockerfiles:
+  stage: prepare-ci  # or could be lint-ci
+  dependencies:
+    - prepare-artifacts
+  needs:
+    - prepare-artifacts
+  image:
+    name: hadolint/hadolint:latest-alpine
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - hadolint --version
+    - "cat generated/Dockerfiles.txt | tr '\n' '\0' | xargs -0 -n1 hadolint"
+  allow_failure: true
 
 lint-config:
   stage: lint-ci
