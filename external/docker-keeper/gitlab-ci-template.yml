@@ -1,0 +1,140 @@
+---
+# default relative path (subtree prefix)
+variables:
+  KEEPER_SUBTREE: external/docker-keeper
+
+stages:
+  - lint-src
+  - compile
+  - prepare-ci
+  - lint-ci
+  - trigger-ci
+  - notify
+
+.lint-yaml:
+  dependencies: []  # optional
+  variables:
+    FILENAME: existing-file-name  # to override in child jobs
+  image:
+    name: cytopia/yamllint
+    entrypoint: ["/bin/ash", "-c"]
+  script:
+    - echo "$FILENAME"
+    - yamllint -f colored "$FILENAME"
+
+.python:
+  dependencies: []  # optional
+  image: python:3-alpine
+  before_script:
+    - pip install --no-cache-dir -r "$KEEPER_SUBTREE/requirements.txt"
+
+lint-images:
+  stage: lint-src
+  extends: .lint-yaml
+  variables:
+    FILENAME: 'images.yml'
+
+prepare-artifacts:
+  stage: compile
+  extends: .python
+  script:
+    - apk add --no-cache git
+    - git rev-parse --verify HEAD
+    - git describe --all --long --abbrev=40 --always --dirty
+    - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
+    - echo "$CI_JOB_URL" > generated/CI_JOB_URL.txt
+  artifacts:
+    name: "docker-keeper_$CI_JOB_NAME"
+    when: always
+    paths:
+      - generated/build_data.json
+      - generated/build_data_min.json
+      - generated/remote_tags.json
+      - generated/remote_tags_to_rm.json
+      - generated/Dockerfiles.txt
+      - generated/README.md
+      - generated/docker_repo.txt
+      - generated/CI_JOB_URL.txt
+    expire_in: 6 months
+  except:
+    - tags
+
+prepare-config:
+  stage: prepare-ci
+  extends: .python
+  dependencies:  # OVERRIDE
+    - prepare-artifacts
+  script:
+    - '"$KEEPER_SUBTREE/keeper.py" generate-config > generated/build.yml'
+    # - cat generated/build.yml
+  artifacts:
+    name: "docker-keeper_$CI_JOB_NAME"
+    when: always
+    paths:
+      - generated/build.yml
+    expire_in: 6 months
+  except:
+    - tags
+
+lint-dockerfiles:
+  stage: prepare-ci  # or could be lint-ci
+  dependencies:
+    - prepare-artifacts
+  needs:
+    - prepare-artifacts
+  image:
+    name: hadolint/hadolint:latest-alpine
+    entrypoint: ["/bin/ash", "-c"]
+  allow_failure: true
+  script: |
+    hadolint --version
+    cat generated/Dockerfiles.txt | tr '\n' '\0' | xargs -0 -n1 hadolint
+
+lint-config:
+  stage: lint-ci
+  extends: .lint-yaml
+  dependencies:  # OVERRIDE
+    - prepare-config
+  variables:
+    GIT_STRATEGY: none
+    FILENAME: 'generated/build.yml'
+  except:
+    - tags
+
+trigger-build:
+  stage: trigger-ci
+  only:
+    - master
+  trigger:
+    include:
+      - artifact: generated/build.yml
+        job: prepare-config
+    strategy: depend
+
+debrief:
+  stage: notify
+  dependencies:
+    - prepare-artifacts
+  image: alpine:latest
+  variables:
+    GIT_STRATEGY: none
+  except:
+    - tags
+  script: |+
+    v_CI_JOB_URL=$(cat generated/CI_JOB_URL.txt)
+    v_docker_repo=$(cat generated/docker_repo.txt)
+    cat <<EOF
+    End of the pipeline.
+    Please perform the following tasks:
+
+    * Browse https://hub.docker.com/repository/docker/${v_docker_repo}/tags
+      and remove manually the extraneous tags mentioned in:
+      ${v_CI_JOB_URL}/artifacts/file/generated/remote_tags_to_rm.json
+
+    * Browse https://hub.docker.com/repository/docker/${v_docker_repo}/general
+      and update manually the README from:
+      ${v_CI_JOB_URL}/artifacts/raw/generated/README.md?inline=false
+
+    (* Note: both tasks cannot be automated yet, until
+       https://github.com/docker/roadmap/issues/115 is implemented. *)
+    EOF
