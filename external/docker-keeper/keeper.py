@@ -381,22 +381,6 @@ def write_json_artifact(j, basename):
         json.dump(j, f, indent=json_indent)
 
 
-def write_build_data(build_data):
-    write_json_artifact(build_data, 'build_data.json')
-
-
-def write_build_data_min(build_data_min):
-    write_json_artifact(build_data_min, 'build_data_min.json')
-
-
-def write_remote_tags(remote_tags):
-    write_json_artifact(remote_tags, 'remote_tags.json')
-
-
-def write_remote_tags_to_rm(remote_tags_to_rm):
-    write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
-
-
 def write_text_artifact(text, basename):
     filename = fullpath(basename)
     print_stderr("Generating '%s'..." % filename)
@@ -408,6 +392,22 @@ def write_text_artifact(text, basename):
 def write_list_text_artifact(seq, basename):
     check_list(seq)
     write_text_artifact('\n'.join(seq) + '\n', basename)
+
+
+def write_build_data(build_data):
+    write_json_artifact(build_data, 'build_data.json')
+
+
+def write_build_data_min(build_data_min):
+    write_json_artifact(build_data_min, 'build_data_min.json')
+
+
+def write_remote_tags(remote_tags):
+    write_list_text_artifact(remote_tags, 'remote_tags.txt')
+
+
+def write_remote_tags_to_rm(remote_tags_to_rm):
+    write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
 
 
 def write_list_dockerfile(seq):

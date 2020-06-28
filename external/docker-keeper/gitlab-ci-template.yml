@@ -1,6 +1,6 @@
 ---
-# default relative path (subtree prefix)
 variables:
+  # default relative path (subtree prefix)
   KEEPER_SUBTREE: external/docker-keeper
 
 stages:
@@ -49,7 +49,7 @@ prepare-artifacts:
     paths:
       - generated/build_data.json
       - generated/build_data_min.json
-      - generated/remote_tags.json
+      - generated/remote_tags.txt
       - generated/remote_tags_to_rm.json
       - generated/Dockerfiles.txt
       - generated/README.md
