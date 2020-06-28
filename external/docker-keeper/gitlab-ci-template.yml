@@ -126,15 +126,16 @@ debrief:
     cat <<EOF
     End of the pipeline.
     Please perform the following tasks:
-
-    * Browse https://hub.docker.com/repository/docker/${v_docker_repo}/tags
-      and remove manually the extraneous tags mentioned in:
-      ${v_CI_JOB_URL}/artifacts/file/generated/remote_tags_to_rm.json
-
-    * Browse https://hub.docker.com/repository/docker/${v_docker_repo}/general
-      and update manually the README from:
-      ${v_CI_JOB_URL}/artifacts/raw/generated/README.md?inline=false
-
-    (* Note: both tasks cannot be automated yet, until
-       https://github.com/docker/roadmap/issues/115 is implemented. *)
+    1.
+       Browse https://hub.docker.com/repository/docker/${v_docker_repo}/tags
+       and remove manually the extraneous tags mentioned in:
+       ${v_CI_JOB_URL}/artifacts/file/generated/remote_tags_to_rm.json
+    2.
+       Browse https://hub.docker.com/repository/docker/${v_docker_repo}/general
+       and update manually the README from:
+       ${v_CI_JOB_URL}/artifacts/raw/generated/README.md?inline=false
+    (*
+     * Note: both tasks cannot be automated yet, until
+     * https://github.com/docker/roadmap/issues/115 is implemented.
+     *)
     EOF
