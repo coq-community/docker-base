@@ -1,6 +1,6 @@
 ---
-# default relative path (subtree prefix)
 variables:
+  # default relative path (subtree prefix)
   KEEPER_SUBTREE: external/docker-keeper
 
 stages:
@@ -41,15 +41,39 @@ prepare-artifacts:
     - apk add --no-cache git
     - git rev-parse --verify HEAD
     - git describe --all --long --abbrev=40 --always --dirty
-    - '"$KEEPER_SUBTREE/keeper.py" write-artifacts'
     - echo "$CI_JOB_URL" > generated/CI_JOB_URL.txt
+    - |
+      # Launch keeper.py with proper options
+      if [ -z "$CRON_MODE" ]; then
+        "$KEEPER_SUBTREE/keeper.py" write-artifacts --minimal
+      elif [ "$CRON_MODE" = "nightly" ]; then
+        "$KEEPER_SUBTREE/keeper.py" write-artifacts --nightly
+      elif [ "$CRON_MODE" = "rebuild-all" ]; then
+        "$KEEPER_SUBTREE/keeper.py" write-artifacts --rebuild-all
+      elif [ "$CRON_MODE" = "rebuild-files" ]; then
+        if [ -z "$ITEMS" ]; then
+          echo "Error: file variable ITEMS is missing."
+          false
+        fi
+        "$KEEPER_SUBTREE/keeper.py" write-artifacts --rebuild-files "$ITEMS"
+      elif [ "$CRON_MODE" = "rebuild-tags" ]; then
+        if [ -z "$ITEMS" ]; then
+          echo "Error: file variable ITEMS is missing."
+          false
+        fi
+        "$KEEPER_SUBTREE/keeper.py" write-artifacts --rebuild-tags "$ITEMS"
+      else
+        echo "Error: unexpected value CRON_MODE='$CRON_MODE'."
+        false
+      fi
   artifacts:
     name: "docker-keeper_$CI_JOB_NAME"
     when: always
     paths:
-      - generated/build_data.json
+      - generated/build_data_all.json
       - generated/build_data_min.json
-      - generated/remote_tags.json
+      - generated/build_data_chosen.json
+      - generated/remote_tags.txt
       - generated/remote_tags_to_rm.json
       - generated/Dockerfiles.txt
       - generated/README.md
@@ -58,6 +82,32 @@ prepare-artifacts:
     expire_in: 6 months
   except:
     - tags
+
+check-updates:
+  stage: compile
+  extends: .python
+  only:
+    - schedules
+  allow_failure: true
+  script: |
+    if [ "$CRON_MODE" = "nightly" ]; then
+      version=$("$KEEPER_SUBTREE/keeper.py" --version)
+      upstream=$("$KEEPER_SUBTREE/keeper.py" --upstream-version 2>/dev/null)
+      upstream_repo="https://gitlab.com/erikmd/docker-keeper.git"
+      if [ "$version" != "$upstream" ]; then
+    cat <<EOF
+    You need to update docker-keeper : $version -> $upstream, by doing:
+      cd \$(git rev-parse --show-toplevel)
+      subtree pull --squash -P $KEEPER_SUBTREE $upstream_repo master
+    EOF
+        false
+      else
+        echo "docker-keeper $version is up-to-date"
+      fi
+    else
+      echo "Doing nothing... You may want to set CRON_MODE='nightly'."
+      false  # could be removed
+    fi
 
 prepare-config:
   stage: prepare-ci

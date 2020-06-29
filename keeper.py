@@ -57,6 +57,11 @@ def diff_list(l1, l2):
     return list(filter(lambda e: e not in l2, l1))
 
 
+def meet_list(l1, l2):
+    """Return the sublist of l1, intersecting l2."""
+    return list(filter(lambda e: e in l2, l1))
+
+
 def subset_list(l1, l2):
     """Check if l1 is included in l2."""
     return not diff_list(l1, l2)
@@ -248,6 +253,7 @@ def get_list_dict_dockerfile_matrix_tags_args(json):
        - "tags": […]
        - "args": […]
     """
+    # TODO later-on: fix (dockerfile / path) semantics
     res = []
     images = json['images']
     for item in images:
@@ -381,22 +387,6 @@ def write_json_artifact(j, basename):
         json.dump(j, f, indent=json_indent)
 
 
-def write_build_data(build_data):
-    write_json_artifact(build_data, 'build_data.json')
-
-
-def write_build_data_min(build_data_min):
-    write_json_artifact(build_data_min, 'build_data_min.json')
-
-
-def write_remote_tags(remote_tags):
-    write_json_artifact(remote_tags, 'remote_tags.json')
-
-
-def write_remote_tags_to_rm(remote_tags_to_rm):
-    write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
-
-
 def write_text_artifact(text, basename):
     filename = fullpath(basename)
     print_stderr("Generating '%s'..." % filename)
@@ -408,6 +398,26 @@ def write_text_artifact(text, basename):
 def write_list_text_artifact(seq, basename):
     check_list(seq)
     write_text_artifact('\n'.join(seq) + '\n', basename)
+
+
+def write_build_data_all(build_data_all):
+    write_json_artifact(build_data_all, 'build_data_all.json')
+
+
+def write_build_data_chosen(build_data):
+    write_json_artifact(build_data, 'build_data_chosen.json')
+
+
+def write_build_data_min(build_data_min):
+    write_json_artifact(build_data_min, 'build_data_min.json')
+
+
+def write_remote_tags(remote_tags):
+    write_list_text_artifact(remote_tags, 'remote_tags.txt')
+
+
+def write_remote_tags_to_rm(remote_tags_to_rm):
+    write_json_artifact(remote_tags_to_rm, 'remote_tags_to_rm.json')
 
 
 def write_list_dockerfile(seq):
@@ -429,12 +439,8 @@ def read_json_artifact(basename):
     return j
 
 
-def read_build_data():
-    return read_json_artifact('build_data.json')
-
-
-def read_build_data_min():
-    return read_json_artifact('build_data_min.json')
+def read_build_data_chosen():
+    return read_json_artifact('build_data_chosen.json')
 
 
 def write_readme(base_url, build_data):
@@ -480,6 +486,45 @@ def get_check_tags(seq):
     return res
 
 
+def merge_data(l1, l2):
+    """Append to l1 the elements of l2 that do not belong to l1."""
+    extra = diff_list(l2, l1)
+    return l1 + extra
+
+
+def get_nightly_only(spec, build_data_all):
+    spec2 = copy.deepcopy(spec)
+    images = spec2.pop('images')
+
+    def nightly(item):
+        return 'nightly' in item and item['nightly']
+
+    images2 = list(filter(nightly, images))
+    spec2['images'] = images2
+    return get_list_dict_dockerfile_matrix_tags_args(spec2)
+
+
+def get_files_only(build_data_all, items_filename):
+    with open(items_filename, 'r') as fh:
+        dockerfiles = [item.strip() for item in fh.readlines()]
+
+    # TODO later-on: fix (dockerfile / path) semantics
+    def matching(item):
+        return item['path'] in dockerfiles
+
+    return list(filter(matching, build_data_all))
+
+
+def get_tags_only(build_data_all, items_filename):
+    with open(items_filename, 'r') as fh:
+        tags = [item.strip() for item in fh.readlines()]
+
+    def matching(item):
+        return meet_list(item['tags'], tags)
+
+    return list(filter(matching, build_data_all))
+
+
 def get_version():
     with open(os.path.join(get_script_directory(), 'VERSION'), 'r') as f:
         version = f.read().strip()
@@ -505,11 +550,8 @@ def equalize_args(record):
     return res
 
 
-def generate_config(docker_repo, rebuild=False):
-    if rebuild:
-        data = read_build_data()
-    else:
-        data = read_build_data_min()
+def generate_config(docker_repo):
+    data = read_build_data_chosen()
 
     if not data:
         return """---
@@ -602,20 +644,20 @@ This script is meant to be run by GitLab CI.
 ## Syntax
 
 ```
-keeper.py write-artifacts
+keeper.py write-artifacts [OPTION]
     Generate artifacts in the '%s' directory.
     This requires having file '%s' in the current working directory.
+    OPTION can be:
+        --minimal (default option, can be omitted)
+        --nightly (same as --minimal + nightly-build images)
+        --rebuild-all (rebuild all images)
+        --rebuild-files FILE (rebuild images with Dockerfile mentioned in FILE)
+        --rebuild-tags FILE (rebuild images with tag mentioned in FILE)
 
 keeper.py generate-config
-    Print a GitLab CI YAML config to standard output (minimal builds).
+    Print a GitLab CI YAML config to standard output.
     This requires files:
-      - generated/build_data_min.json
-      - generated/remote_tags_to_rm.json
-
-keeper.py generate-config --rebuild
-    Print a GitLab CI YAML config to standard output (rebuild everything).
-    This requires files:
-      - generated/build_data.json
+      - generated/build_data_chosen.json
       - generated/remote_tags_to_rm.json
 
 keeper.py --version
@@ -642,26 +684,47 @@ def main(args):
         exit(0)
     elif args == ['--upstream-version']:
         print(get_upstream_version())
-    elif args == ['write-artifacts']:
-        spec = load_spec()
-        build_data = get_list_dict_dockerfile_matrix_tags_args(spec)
-        all_tags = get_check_tags(build_data)
-        remote_tags = get_remote_tags(spec)
-        build_data_min = minimal_rebuild(build_data, remote_tags)
-        remote_tags_to_rm = to_rm(all_tags, remote_tags)
-        write_build_data(build_data)
-        write_build_data_min(build_data_min)
-        write_remote_tags(remote_tags)
-        write_remote_tags_to_rm(remote_tags_to_rm)
-        write_list_dockerfile(build_data)
-        write_readme(spec['base_url'], build_data)
-        write_docker_repo(spec)
     elif args == ['generate-config']:
         spec = load_spec()  # could be avoided by writing yet another .json…
         print(generate_config(spec['docker_repo']))
-    elif args == ['generate-config', '--rebuild']:
-        spec = load_spec()  # could be avoided by writing yet another .json…
-        print(generate_config(spec['docker_repo'], rebuild=True))
+    elif args == ['--help'] or args == []:
+        usage()
+    elif args[0] == ['write-artifacts']:
+        spec = load_spec()
+        build_data_all = get_list_dict_dockerfile_matrix_tags_args(spec)
+        all_tags = get_check_tags(build_data_all)
+        remote_tags = get_remote_tags(spec)
+        build_data_min = minimal_rebuild(build_data_all, remote_tags)
+        remote_tags_to_rm = to_rm(all_tags, remote_tags)
+        write_build_data_all(build_data_all)
+        write_build_data_min(build_data_min)
+        write_remote_tags(remote_tags)
+        write_remote_tags_to_rm(remote_tags_to_rm)
+        write_list_dockerfile(build_data_all)
+        write_readme(spec['base_url'], build_data_all)
+        write_docker_repo(spec)
+        if args[1:] == [] or args[1:] == ['--minimal']:
+            write_build_data_chosen(build_data_min)
+        elif args[1:] == ['--rebuild-all']:
+            write_build_data_chosen(build_data_all)
+        elif args[1:] == ['--nightly']:
+            nightly_only = get_nightly_only(spec)
+            build_data_nightly = merge_data(build_data_min, nightly_only)
+            write_build_data_chosen(build_data_nightly)
+        elif args[1] == '--rebuild-files':
+            if len(args) != 3:
+                error("Error: --rebuild-files expects one argument exactly."
+                      "\nWas: %s" % args)
+            rebuild_files_only = get_files_only(build_data_all, args[2])
+            build_data_files = merge_data(build_data_min, rebuild_files_only)
+            write_build_data_chosen(build_data_files)
+        elif args[1] == '--rebuild-tags':
+            if len(args) != 3:
+                error("Error: --rebuild-files expects one argument exactly."
+                      "\nWas: %s" % args)
+            rebuild_tags_only = get_tags_only(build_data_all, args[2])
+            build_data_tags = merge_data(build_data_min, rebuild_tags_only)
+            write_build_data_chosen(build_data_tags)
     else:
         usage()
 
@@ -746,6 +809,24 @@ def test_subset_list():
 def test_equalize_args():
     assert (equalize_args({"VAR1": "value1", "VAR2": "value2"}) ==
             ['VAR1=value1', 'VAR2=value2'])
+
+
+def test_merge_data():
+    l1 = [{"i": 1, "s": "a"}, {"i": 2, "s": "b"}, {"i": 1, "s": "a"}]
+    l2 = [{"i": 2, "s": "b"}, {"i": 2, "s": "b"}, {"i": 3, "s": "c"}]
+    res1 = merge_data(l1, l2)
+    assert res1 == [{"i": 1, "s": "a"}, {"i": 2, "s": "b"}, {"i": 1, "s": "a"},
+                    {"i": 3, "s": "c"}]
+    res2 = merge_data(l2, l1)
+    assert res2 == [{"i": 2, "s": "b"}, {"i": 2, "s": "b"}, {"i": 3, "s": "c"},
+                    {"i": 1, "s": "a"}, {"i": 1, "s": "a"}]
+
+
+def test_meet_list():
+    assert not meet_list([1, 2], [])
+    assert not meet_list([], [2, 3])
+    assert not meet_list([1, 2], [3])
+    assert meet_list([1, 2], [2, 3])
 
 
 if __name__ == "__main__":
