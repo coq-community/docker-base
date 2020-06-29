@@ -59,6 +59,32 @@ prepare-artifacts:
   except:
     - tags
 
+check-updates:
+  stage: compile
+  extends: .python
+  only:
+    - schedules
+  allow_failure: true
+  script: |
+    if [ "$CRON_MODE" = "nightly" ]; then
+      version=$("$KEEPER_SUBTREE/keeper.py" --version)
+      upstream=$("$KEEPER_SUBTREE/keeper.py" --upstream-version 2>/dev/null)
+      upstream_repo="https://gitlab.com/erikmd/docker-keeper.git"
+      if [ "$version" != "$upstream" ]; then
+    cat <<EOF
+    You need to update docker-keeper : $version -> $upstream, by doing:
+      cd \$(git rev-parse --show-toplevel)
+      subtree pull --squash -P $KEEPER_SUBTREE $upstream_repo master
+    EOF
+        false
+      else
+        echo "docker-keeper $version is up-to-date"
+      fi
+    else
+      echo "Doing nothing... You may want to set CRON_MODE='nightly'."
+      false  # could be removed
+    fi
+
 prepare-config:
   stage: prepare-ci
   extends: .python
