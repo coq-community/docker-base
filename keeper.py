@@ -713,20 +713,28 @@ def main(args):
             write_build_data_chosen(build_data_nightly)
         elif args[1] == '--rebuild-files':
             if len(args) != 3:
-                error("Error: --rebuild-files expects one argument exactly."
-                      "\nWas: %s" % args)
+                print_stderr("Error: "
+                             "--rebuild-files expects one argument exactly."
+                             "\nWas: %s" % args)
+                usage()
+                exit(1)
             rebuild_files_only = get_files_only(build_data_all, args[2])
             build_data_files = merge_data(build_data_min, rebuild_files_only)
             write_build_data_chosen(build_data_files)
         elif args[1] == '--rebuild-tags':
             if len(args) != 3:
-                error("Error: --rebuild-files expects one argument exactly."
-                      "\nWas: %s" % args)
+                print_stderr("Error: "
+                             "--rebuild-files expects one argument exactly."
+                             "\nWas: %s" % args)
+                usage()
+                exit(1)
             rebuild_tags_only = get_tags_only(build_data_all, args[2])
             build_data_tags = merge_data(build_data_min, rebuild_tags_only)
             write_build_data_chosen(build_data_tags)
     else:
+        print_stderr("Error: wrong arguments.\nWas: %s" % args)
         usage()
+        exit(1)
 
 
 ###############################################################################
