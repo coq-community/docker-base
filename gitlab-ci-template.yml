@@ -139,6 +139,7 @@ lint-dockerfiles:
   allow_failure: true
   script: |
     hadolint --version
+    cat generated/Dockerfiles.txt
     cat generated/Dockerfiles.txt | tr '\n' '\0' | xargs -0 -n1 hadolint
 
 lint-config:
