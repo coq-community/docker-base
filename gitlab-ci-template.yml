@@ -41,6 +41,7 @@ prepare-artifacts:
     - apk add --no-cache git
     - git rev-parse --verify HEAD
     - git describe --all --long --abbrev=40 --always --dirty
+    - mkdir -p generated
     - echo "$CI_JOB_URL" > generated/CI_JOB_URL.txt
     - |
       # Launch keeper.py with proper options
