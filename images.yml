@@ -9,8 +9,7 @@ args:
   DUNE_VERSION: '2.5.1'
 images:
   - matrix:
-      # TODO: remove 4.09.0-flambda later on
-      tag: ['4.09.0-flambda']
+      tag: ['4.09.1-flambda']
     build:
       context: './base'
       dockerfile: './single/Dockerfile'
