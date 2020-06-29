@@ -492,14 +492,15 @@ def merge_data(l1, l2):
     return l1 + extra
 
 
-def get_nightly_only(spec, build_data_all):
+def get_nightly_only(spec):
     spec2 = copy.deepcopy(spec)
     images = spec2.pop('images')
 
     def nightly(item):
-        return 'nightly' in item and item['nightly']
+        return 'nightly' in item['build'] and item['build']['nightly']
 
     images2 = list(filter(nightly, images))
+    print(images2)
     spec2['images'] = images2
     return get_list_dict_dockerfile_matrix_tags_args(spec2)
 
