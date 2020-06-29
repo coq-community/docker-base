@@ -689,7 +689,7 @@ def main(args):
         print(generate_config(spec['docker_repo']))
     elif args == ['--help'] or args == []:
         usage()
-    elif args[0] == ['write-artifacts']:
+    elif args[0] == 'write-artifacts':
         spec = load_spec()
         build_data_all = get_list_dict_dockerfile_matrix_tags_args(spec)
         all_tags = get_check_tags(build_data_all)
