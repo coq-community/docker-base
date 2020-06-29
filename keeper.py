@@ -696,13 +696,6 @@ def main(args):
         remote_tags = get_remote_tags(spec)
         build_data_min = minimal_rebuild(build_data_all, remote_tags)
         remote_tags_to_rm = to_rm(all_tags, remote_tags)
-        write_build_data_all(build_data_all)
-        write_build_data_min(build_data_min)
-        write_remote_tags(remote_tags)
-        write_remote_tags_to_rm(remote_tags_to_rm)
-        write_list_dockerfile(build_data_all)
-        write_readme(spec['base_url'], build_data_all)
-        write_docker_repo(spec)
         if args[1:] == [] or args[1:] == ['--minimal']:
             write_build_data_chosen(build_data_min)
         elif args[1:] == ['--rebuild-all']:
@@ -731,6 +724,17 @@ def main(args):
             rebuild_tags_only = get_tags_only(build_data_all, args[2])
             build_data_tags = merge_data(build_data_min, rebuild_tags_only)
             write_build_data_chosen(build_data_tags)
+        else:
+            print_stderr("Error: wrong arguments.\nWas: %s" % args)
+            usage()
+            exit(1)
+        write_build_data_all(build_data_all)
+        write_build_data_min(build_data_min)
+        write_remote_tags(remote_tags)
+        write_remote_tags_to_rm(remote_tags_to_rm)
+        write_list_dockerfile(build_data_all)
+        write_readme(spec['base_url'], build_data_all)
+        write_docker_repo(spec)
     else:
         print_stderr("Error: wrong arguments.\nWas: %s" % args)
         usage()
