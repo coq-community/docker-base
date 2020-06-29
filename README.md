@@ -1,7 +1,6 @@
 # coqorg/base
 
-[![automated](https://img.shields.io/docker/automated/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base "Automated build on Docker Hub")
-[![build](https://img.shields.io/docker/build/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base/builds "Automated build on Docker Hub")
+[![pipeline status](https://gitlab.com/coq-community/docker-base/badges/master/pipeline.svg)](https://gitlab.com/coq-community/docker-base/-/commits/master)
 [![layers](https://images.microbadger.com/badges/image/coqorg/base:latest.svg)](https://microbadger.com/images/coqorg/base:latest "View image on microbadger.com")
 [![pulls](https://img.shields.io/docker/pulls/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base "Number of pulls from Docker Hub")
 [![stars](https://img.shields.io/docker/stars/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base "Star the image on Docker Hub")  
