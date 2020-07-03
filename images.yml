@@ -53,9 +53,5 @@ images:
     build:
       context: './base'
       dockerfile: './bare/Dockerfile'
-      args:
-        # TODO: refactor later on
-        COMPILER: '4.05.0'
-        COMPILER_EDGE: '4.07.1+flambda'
       tags:
         - tag: '{matrix[tag]}'
