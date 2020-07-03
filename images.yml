@@ -19,15 +19,23 @@ images:
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
-      # TODO: replace latest with two single switches
-      tag: ['latest']
+      tag: ['4.07.1-flambda']
     build:
       context: './base'
-      dockerfile: './dual/Dockerfile'
+      dockerfile: './single/Dockerfile'
+      args:
+        COMPILER: '4.07.1+flambda'
+        NUM_VERSION: '1.3'
+      tags:
+        - tag: '{matrix[tag]}'
+  - matrix:
+      tag: ['4.05.0']
+    build:
+      context: './base'
+      dockerfile: './single/Dockerfile'
       args:
         COMPILER: '4.05.0'
-        COMPILER_EDGE: '4.07.1+flambda'
-        # TODO: then specify NUM_VERSION
+        NUM_VERSION: '0'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
@@ -45,9 +53,5 @@ images:
     build:
       context: './base'
       dockerfile: './bare/Dockerfile'
-      args:
-        # TODO: refactor later on
-        COMPILER: '4.05.0'
-        COMPILER_EDGE: '4.07.1+flambda'
       tags:
         - tag: '{matrix[tag]}'
