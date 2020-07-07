@@ -1,7 +1,7 @@
 # coqorg/base
 
 [![tags](https://img.shields.io/badge/tags%20on-docker%20hub-blue.svg)](https://hub.docker.com/r/coqorg/base#supported-tags "Supported tags on Docker Hub")
-[![pipeline status](https://gitlab.com/coq-community/docker-base/badges/master/pipeline.svg)](https://gitlab.com/coq-community/docker-base/-/commits/master)
+[![pipeline status](https://gitlab.com/coq-community/docker-base/badges/master/pipeline.svg)](https://gitlab.com/coq-community/docker-base/-/pipelines)
 [![layers](https://images.microbadger.com/badges/image/coqorg/base:latest.svg)](https://microbadger.com/images/coqorg/base:latest "View image on microbadger.com")
 [![pulls](https://img.shields.io/docker/pulls/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base "Number of pulls from Docker Hub")
 [![stars](https://img.shields.io/docker/stars/coqorg/base.svg)](https://hub.docker.com/r/coqorg/base "Star the image on Docker Hub")  
