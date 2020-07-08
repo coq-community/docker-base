@@ -12,4 +12,6 @@ This repository provides parent images for [Docker](https://www.docker.com/) ima
 
 These images are based on [Debian 10 Slim](https://hub.docker.com/_/debian/).
 
+The Dockerfile repository is [mirrored on GitLab](https://gitlab.com/coq-community/docker-base), but [issues](https://github.com/coq-community/docker-base/issues) and [pull requests](https://github.com/coq-community/docker-base/pulls) are tracked on GitHub.
+
 <!-- tags -->
