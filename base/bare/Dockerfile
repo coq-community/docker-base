@@ -74,7 +74,3 @@ ENTRYPOINT ["opam", "exec", "--"]
 CMD ["/bin/bash", "--login"]
 
 LABEL maintainer="erik@martin-dorel.org"
-
-# Restore default shell to fully preserve backward compatibility
-SHELL ["/bin/sh", "-c"]
-# Still, we may remove this line later on.
