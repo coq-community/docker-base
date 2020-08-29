@@ -26,6 +26,7 @@ RUN cat /proc/cpuinfo /proc/meminfo \
     # gnupg is temporarily installed and will not be kept in the image
     gnupg \
     less \
+    libgmp-dev \
     m4 \
     openssh-client \
     pkg-config \

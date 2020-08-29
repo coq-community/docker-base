@@ -20,6 +20,7 @@ RUN cat /proc/cpuinfo /proc/meminfo \
     # gnupg is temporarily installed and will not be kept in the image
     gnupg \
     less \
+    libgmp-dev \
     m4 \
     openssh-client \
     pkg-config \
@@ -72,6 +73,9 @@ ENV DUNE_VERSION=${DUNE_VERSION}
 ARG NUM_VERSION=0
 # or 1.3
 
+ARG ZARITH_VERSION
+ENV ZARITH_VERSION=${ZARITH_VERSION}
+
 # hadolint ignore=SC2046
 RUN set -x \
   && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
@@ -82,7 +86,8 @@ RUN set -x \
   && opam pin add -n -k version ocamlfind ${OCAMLFIND_VERSION} \
   && opam pin add -n -k version dune ${DUNE_VERSION} \
   && opam pin add -n -k version num ${NUM_VERSION} \
-  && opam install -y -v -j ${NJOBS} ocamlfind dune num \
+  && opam pin add -n -k version zarith ${ZARITH_VERSION} \
+  && opam install -y -v -j ${NJOBS} ocamlfind dune num zarith \
   && opam clean -a -c -s --logs \
   && opam config list && opam list
 
