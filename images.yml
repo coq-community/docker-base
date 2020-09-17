@@ -7,7 +7,7 @@ args:
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.8.1'
   DUNE_VERSION: '2.5.1'
-  ZARITH_VERSION: '1.9.1'
+  ZARITH_VERSION: '1.10'
 images:
   - matrix:
       tag: ['4.09.1-flambda']
