@@ -9,16 +9,6 @@ args:
   DUNE_VERSION: '2.5.1'
   ZARITH_VERSION: '1.10'
 images:
-  - matrix:
-      tag: ['4.09.1-flambda']
-    build:
-      context: './base'
-      dockerfile: './single/Dockerfile'
-      args:
-        COMPILER: '{matrix[tag][//-/+]}'
-        NUM_VERSION: '1.3'
-      tags:
-        - tag: '{matrix[tag]}'
   # TODO: remove latest after the migration time
   - matrix:
       tag: ['latest']
@@ -32,7 +22,12 @@ images:
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
-      tag: ['4.07.1-flambda']
+      tag:
+        - '4.11.1-flambda'
+        - '4.10.1-flambda'
+        - '4.09.1-flambda'
+        - '4.08.1-flambda'
+        - '4.07.1-flambda'
     build:
       context: './base'
       dockerfile: './single/Dockerfile'
