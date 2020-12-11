@@ -42,6 +42,16 @@ images:
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
+      tag: ['4.07.1']
+    build:
+      context: './base'
+      dockerfile: './single/Dockerfile'
+      args:
+        COMPILER: '{matrix[tag]}'
+        NUM_VERSION: '1.3'
+      tags:
+        - tag: '{matrix[tag]}'
+  - matrix:
       tag: ['4.05.0']
     build:
       context: './base'
