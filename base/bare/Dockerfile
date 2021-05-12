@@ -38,12 +38,12 @@ RUN cat /proc/cpuinfo /proc/meminfo \
   && binary="opam-${OPAM_VERSION}-$(uname -m)-$(uname -s | tr '[:upper:]' '[:lower:]')" \
   && set -x \
   && curl -fSL -o "/tmp/${binary}" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}" \
-  && curl -fSL -o "/tmp/${binary}.asc" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc" \
+  && curl -fSL -o "/tmp/${binary}.sig" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.sig" \
   && curl -fsSL https://opam.ocaml.org/opam-dev-pubkey.pgp | gpg --batch --import \
-  && gpg --batch --verify "/tmp/${binary}.asc" "/tmp/${binary}" \
+  && gpg --batch --verify "/tmp/${binary}.sig" "/tmp/${binary}" \
   && mv "/tmp/${binary}" /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
-  && rm -f "/tmp/${binary}.asc" \
+  && rm -f "/tmp/${binary}.sig" \
   && rm -fr /root/.gnupg \
   && DEBIAN_FRONTEND=noninteractive apt-get purge -y -q --auto-remove gnupg \
   && apt-get clean \
