@@ -39,7 +39,7 @@ RUN cat /proc/cpuinfo /proc/meminfo \
   && set -x \
   && curl -fSL -o "/tmp/${binary}" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}" \
   && curl -fSL -o "/tmp/${binary}.asc" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.asc" \
-  && curl -fsSL https://keybase.io/altgr/pgp_keys.asc | gpg --batch --import \
+  && curl -fsSL https://opam.ocaml.org/opam-dev-pubkey.pgp | gpg --batch --import \
   && gpg --batch --verify "/tmp/${binary}.asc" "/tmp/${binary}" \
   && mv "/tmp/${binary}" /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
