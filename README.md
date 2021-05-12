@@ -10,7 +10,14 @@
 
 This repository provides parent images for [Docker](https://www.docker.com/) images of the [Coq](https://github.com/coq/coq) proof assistant.
 
-These images are based on [Debian 10 Slim](https://hub.docker.com/_/debian/).
+These images are based on [Debian 10 Slim](https://hub.docker.com/_/debian/):
+
+|   | GitHub repo                                                             | Type          | Docker Hub                                             |
+|---|-------------------------------------------------------------------------|---------------|--------------------------------------------------------|
+|   | [docker-coq-action](https://github.com/coq-community/docker-coq-action) | GitHub action | N/A                                                    |
+|   | [docker-coq](https://github.com/coq-community/docker-coq)               | Dockerfile    | [`coqorg/coq`](https://hub.docker.com/r/coqorg/coq/)   |
+| x | [docker-base](https://github.com/coq-community/docker-base)             | Dockerfile    | [`coqorg/base`](https://hub.docker.com/r/coqorg/base/) |
+| ↳ | Debian                                                                  | Linux distro  | [`debian`](https://hub.docker.com/_/debian/)           |
 
 The Dockerfile repository is [mirrored on GitLab](https://gitlab.com/coq-community/docker-base), but [issues](https://github.com/coq-community/docker-base/issues) and [pull requests](https://github.com/coq-community/docker-base/pulls) are tracked on GitHub.
 
