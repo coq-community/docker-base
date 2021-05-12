@@ -5,7 +5,8 @@ docker_repo: 'coqorg/base'
 args:
   OPAM_VERSION: '2.0.8'
   # pass these args albeit they are not used by all Dockerfiles:
-  OCAMLFIND_VERSION: '1.9.1'
+  OCAMLFIND_VERSION: '1.8.1'
+  # Cannot use 1.9.1 because of ocamlfind-secondary
   DUNE_VERSION: '2.8.5'
   ZARITH_VERSION: '1.12'
 images:
