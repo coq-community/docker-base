@@ -3,11 +3,10 @@ base_url: 'https://gitlab.com/coq-community/docker-base'
 active: true
 docker_repo: 'coqorg/base'
 args:
-  OPAM_VERSION: '2.0.8'
+  OPAM_VERSION: '2.1.0'
   # pass these args albeit they are not used by all Dockerfiles:
-  OCAMLFIND_VERSION: '1.8.1'
-  # Cannot use 1.9.1 because of ocamlfind-secondary
-  DUNE_VERSION: '2.8.5'
+  OCAMLFIND_VERSION: '1.9.1'
+  DUNE_VERSION: '2.9.1'
   ZARITH_VERSION: '1.12'
 images:
   # TODO: remove latest after the migration time
