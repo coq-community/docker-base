@@ -65,6 +65,11 @@ ENV NJOBS="2"
 ENV OPAMPRECISETRACKING="1"
 ARG COMPILER
 ENV COMPILER=${COMPILER}
+# The following variable is unneeded for ocaml < 4.12
+# Otherwise, use e.g.:
+# --build-arg=COMPILER=4.12.0+flambda
+# --build-arg=COMPILER_PACKAGE=ocaml-variants.4.12.0+options,ocaml-option-flambda
+ARG COMPILER_PACKAGE
 ARG OCAMLFIND_VERSION
 ENV OCAMLFIND_VERSION=${OCAMLFIND_VERSION}
 ARG DUNE_VERSION
@@ -78,7 +83,8 @@ ENV ZARITH_VERSION=${ZARITH_VERSION}
 
 # hadolint ignore=SC2046
 RUN set -x \
-  && opam init --auto-setup --yes --jobs=${NJOBS} --compiler=${COMPILER} --disable-sandboxing \
+  && opam init --auto-setup --yes --bare --disable-sandboxing \
+  && opam switch create --jobs=${NJOBS} ${COMPILER} ${COMPILER_PACKAGE:+--package=}${COMPILER_PACKAGE} \
   && eval $(opam env) \
   && opam repository add --all-switches --set-default coq-released https://coq.inria.fr/opam/released \
   && opam update -y \
