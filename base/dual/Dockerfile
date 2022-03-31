@@ -33,7 +33,7 @@ RUN cat /proc/cpuinfo /proc/meminfo \
   && set -x \
   && curl -fSL -o "/tmp/${binary}" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}" \
   && curl -fSL -o "/tmp/${binary}.sig" "https://github.com/ocaml/opam/releases/download/${OPAM_VERSION}/${binary}.sig" \
-  && curl -fsSL https://opam.ocaml.org/opam-dev-pubkey.pgp | gpg --batch --import \
+  && curl -fsSL https://opam-3.ocaml.org/opam-dev-pubkey.pgp | gpg --batch --import \
   && gpg --batch --verify "/tmp/${binary}.sig" "/tmp/${binary}" \
   && mv "/tmp/${binary}" /usr/local/bin/opam \
   && chmod a+x /usr/local/bin/opam \
