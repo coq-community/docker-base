@@ -83,7 +83,7 @@ RUN set -x \
   && opam install -y -j 1 opam-depext \
   && opam pin add -n -k version ocamlfind ${OCAMLFIND_VERSION} \
   && opam pin add -n -k version dune ${DUNE_VERSION} \
-  && opam pin add -n -k version num 1.3 \
+  && opam pin add -n -k version num 1.4 \
   && opam pin add -n -k version zarith ${ZARITH_VERSION} \
   && opam install -y -v -j ${NJOBS} ocamlfind dune num zarith \
   && opam clean -a -c -s --logs \
