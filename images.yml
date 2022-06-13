@@ -36,6 +36,9 @@ images:
         - tag: '{matrix[tag]}'
   - matrix:
       tag:
+        - '4.14.0-flambda'
+        - '4.13.1-flambda'
+        - '4.12.1-flambda'
         - '4.11.2-flambda'
         - '4.10.2-flambda'
         - '4.09.1-flambda'
@@ -50,7 +53,9 @@ images:
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
-      tag: ['4.07.1']
+      tag:
+        - '4.13.1'
+        - '4.07.1'
     build:
       context: './base'
       dockerfile: './single/Dockerfile'
