@@ -23,6 +23,7 @@ images:
         - tag: '{matrix[tag]}'
   - matrix:
       tag:
+        - '4.14.0-flambda'
         - '4.13.1-flambda'
         - '4.12.1-flambda'
     build:
@@ -36,9 +37,6 @@ images:
         - tag: '{matrix[tag]}'
   - matrix:
       tag:
-        - '4.14.0-flambda'
-        - '4.13.1-flambda'
-        - '4.12.1-flambda'
         - '4.11.2-flambda'
         - '4.10.2-flambda'
         - '4.09.1-flambda'
