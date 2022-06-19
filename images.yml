@@ -11,17 +11,6 @@ args:
 images:
   # TODO: remove latest after the migration time
   - matrix:
-      tag: ['latest']
-    build:
-      context: './base'
-      dockerfile: './dual/Dockerfile'
-      args:
-        COMPILER: '4.05.0'
-        COMPILER_EDGE: '4.07.1+flambda'
-        # TODO: hard-code NUM_VERSION in the Dockerfile
-      tags:
-        - tag: '{matrix[tag]}'
-  - matrix:
       tag:
         - '4.14.0-flambda'
         - '4.13.1-flambda'
