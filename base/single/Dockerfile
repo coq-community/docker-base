@@ -1,4 +1,4 @@
-FROM debian:10-slim
+FROM debian:11-slim
 
 ARG OPAM_VERSION
 ENV OPAM_VERSION=${OPAM_VERSION}
