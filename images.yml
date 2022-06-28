@@ -6,7 +6,7 @@ args:
   OPAM_VERSION: '2.1.2'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.1'
-  DUNE_VERSION: '3.2.0'
+  DUNE_VERSION: '3.3.1'
   ZARITH_VERSION: '1.12'
 images:
   # TODO: remove latest after the migration time
