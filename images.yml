@@ -9,7 +9,6 @@ args:
   DUNE_VERSION: '3.6.1'
   ZARITH_VERSION: '1.12'
 images:
-  # TODO: remove latest after the migration time
   - matrix:
       tag:
         - '5.0.0-flambda'
