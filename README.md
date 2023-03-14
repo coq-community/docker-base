@@ -18,6 +18,6 @@ These images are based on [Debian 11 Slim](https://hub.docker.com/_/debian/):
 | ⊙ | [docker-base](https://github.com/coq-community/docker-base)             | Dockerfile    | [`coqorg/base`](https://hub.docker.com/r/coqorg/base/) |
 | ↳ | Debian                                                                  | Linux distro  | [`debian`](https://hub.docker.com/_/debian/)           |
 
-The Dockerfile repository is [mirrored on GitLab](https://gitlab.com/coq-community/docker-base), but [issues](https://github.com/coq-community/docker-base/issues) and [pull requests](https://github.com/coq-community/docker-base/pulls) are tracked on GitHub.
+This Dockerfile repository is [mirrored on GitLab](https://gitlab.com/coq-community/docker-base), but [issues](https://github.com/coq-community/docker-base/issues) and [pull requests](https://github.com/coq-community/docker-base/pulls) are tracked on GitHub.
 
 <!-- tags -->
