@@ -5,9 +5,10 @@ docker_repo: 'coqorg/base'
 args:
   OPAM_VERSION: '2.1.3'
   # pass these args albeit they are not used by all Dockerfiles:
-  OCAMLFIND_VERSION: '1.9.1'
+  OCAMLFIND_VERSION: '1.9.6'
   DUNE_VERSION: '3.7.1'
   ZARITH_VERSION: '1.12'
+  NUM_VERSION: '1.4'
 images:
   - matrix:
       tag:
@@ -21,7 +22,6 @@ images:
       args:
         COMPILER: '{matrix[tag][//-/+]}'
         COMPILER_PACKAGE: 'ocaml-variants.{matrix[tag][%-*]}+options,ocaml-option-flambda'
-        NUM_VERSION: '1.4'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
@@ -30,7 +30,6 @@ images:
         - '4.10.2-flambda'
         - '4.09.1-flambda'
         - '4.08.1-flambda'
-        - '4.07.1-flambda'
     build:
       context: './base'
       dockerfile: './single/Dockerfile'
@@ -41,15 +40,35 @@ images:
         - tag: '{matrix[tag]}'
   - matrix:
       tag:
+        - '4.07.1-flambda'
+    build:
+      context: './base'
+      dockerfile: './single/Dockerfile'
+      args:
+        COMPILER: '{matrix[tag][//-/+]}'
+        OCAMLFIND_VERSION: '1.9.1'
+      tags:
+        - tag: '{matrix[tag]}'
+  - matrix:
+      tag:
         - '5.0.0'
         - '4.13.1'
+    build:
+      context: './base'
+      dockerfile: './single/Dockerfile'
+      args:
+        COMPILER: '{matrix[tag]}'
+      tags:
+        - tag: '{matrix[tag]}'
+  - matrix:
+      tag:
         - '4.07.1'
     build:
       context: './base'
       dockerfile: './single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
-        NUM_VERSION: '1.4'
+        OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
@@ -60,6 +79,7 @@ images:
       args:
         COMPILER: '{matrix[tag]}'
         NUM_VERSION: '0'
+        OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
@@ -69,8 +89,9 @@ images:
       dockerfile: './single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
-        ZARITH_VERSION: '1.10'
+        ZARITH_VERSION: '1.11'
         NUM_VERSION: '0'
+        OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
