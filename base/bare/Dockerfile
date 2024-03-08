@@ -60,8 +60,8 @@ RUN groupadd -g ${guest_gid} coq \
   && mkdir -p -v /home/coq/bin /home/coq/.local/bin \
   && chown coq:coq /home/coq/bin /home/coq/.local /home/coq/.local/bin
 
-# Load travis.sh at login
-COPY travis.sh /etc/profile.d/
+# Load travis.sh, umask.sh at login
+COPY travis.sh umask.sh /etc/profile.d/
 
 WORKDIR /home/coq
 
