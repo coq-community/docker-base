@@ -57,7 +57,7 @@ ARG guest_gid=${guest_uid}
 RUN groupadd -g ${guest_gid} coq \
   && useradd --no-log-init -m -s /bin/bash -g coq -G sudo -p '' -u ${guest_uid} coq \
   # Create dirs for user scripts
-  && mkdir -p -v /home/coq/bin /home/coq/.local/bin \
+  && mkdir -m 775 -p -v /home/coq/bin /home/coq/.local/bin \
   && chown coq:coq /home/coq/bin /home/coq/.local /home/coq/.local/bin
 
 # Load travis.sh, umask.sh at login
