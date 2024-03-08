@@ -54,6 +54,7 @@ ARG guest_uid=1000
 ARG guest_gid=${guest_uid}
 
 # Add Coq group and user with sudo perms
+# hadolint ignore=SC2174
 RUN groupadd -g ${guest_gid} coq \
   && useradd --no-log-init -m -s /bin/bash -g coq -G sudo -p '' -u ${guest_uid} coq \
   # Create dirs for user scripts
