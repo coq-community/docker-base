@@ -6,7 +6,7 @@ args:
   OPAM_VERSION: '2.1.5'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.6'
-  DUNE_VERSION: '3.14.0'
+  DUNE_VERSION: '3.13.1'
   ZARITH_VERSION: '1.12'
   NUM_VERSION: '1.4'
 images:
