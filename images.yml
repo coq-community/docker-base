@@ -3,12 +3,12 @@ base_url: 'https://gitlab.com/coq-community/docker-base'
 active: true
 docker_repo: 'coqorg/base'
 args:
-  OPAM_VERSION: '2.1.5'
+  OPAM_VERSION: '2.1.6'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.6'
   DUNE_VERSION: '3.13.1'
-  ZARITH_VERSION: '1.12'
-  NUM_VERSION: '1.4'
+  ZARITH_VERSION: '1.13'
+  NUM_VERSION: '1.5'
 images:
   - matrix:
       tag:
@@ -35,7 +35,6 @@ images:
       dockerfile: './single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
-        NUM_VERSION: '1.4'
       tags:
         - tag: '{matrix[tag]}'
   - matrix:
