@@ -13,7 +13,7 @@ images:
   - matrix:
       tag:
         - '5.0.0-flambda'
-        - '4.14.1-flambda'
+        - '4.14.2-flambda'
         - '4.13.1-flambda'
         - '4.12.1-flambda'
     build:
