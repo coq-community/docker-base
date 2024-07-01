@@ -9,6 +9,15 @@ args:
   DUNE_VERSION: '3.13.1'
   ZARITH_VERSION: '1.13'
   NUM_VERSION: '1.5'
+propagate:
+  coq:
+    api_token_env_var: 'DOCKER_COQ_TOKEN'
+    gitlab_domain: 'gitlab.com'
+    gitlab_project: '19687072'
+    strategy:
+      - when: 'rebuild-all'
+        mode: 'rebuild-all'
+      # TODO: improve with ocaml keywords in docker-coq?
 images:
   - matrix:
       tag:
