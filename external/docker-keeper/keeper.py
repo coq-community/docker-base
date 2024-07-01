@@ -1019,7 +1019,7 @@ def get_propagate_strategy(spec, build_data_chosen,
                 # END idem5
 
         res_prop1['strategy'] = res_strat
-        if res_strat['mode'] != 'nil':
+        if 'mode' in res_strat and res_strat['mode'] != 'nil':
             res_prop[slug] = res_prop1
 
     # check that all manually-specified propagate slug belonged in the strategy
