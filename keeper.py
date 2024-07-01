@@ -1221,16 +1221,15 @@ deploy_{var_job_id}_{var_some_real_tag}:
                          var_mod=prop['strategy']['mode'],
                          var_it=item)
         curl_propagate.append(next_curl)
-
-    yamlstr_jobs += """
+    if propagate_data:
+        yamlstr_jobs += """
 propagate:
   extends: .curl-propagate
   script: |
     /usr/bin/env bash -e -c '
       echo $0
       . "{var_keeper_subtree}/gitlab_functions.sh"
-      {var_curl_propagate}
-    ' bash
+      {var_curl_propagate}' bash
 """.format(var_keeper_subtree=keeper_subtree,
            var_curl_propagate=indent_script(curl_propagate, 6))
 
