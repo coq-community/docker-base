@@ -3,12 +3,14 @@ base_url: 'https://gitlab.com/coq-community/docker-base'
 active: true
 docker_repo: 'coqorg/base'
 args:
-  OPAM_VERSION: '2.1.6'
+  OPAM_VERSION: '2.2.0'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.6'
+  # NOTE: do not bump dune's version before this issue is resolved:
+  # https://github.com/ocaml/dune/pull/9895#issuecomment-2207889822
   DUNE_VERSION: '3.13.1'
-  ZARITH_VERSION: '1.13'
-  NUM_VERSION: '1.5'
+  ZARITH_VERSION: '1.14'
+  NUM_VERSION: '1.5-1'
 propagate:
   coq:
     api_token_env_var: 'DOCKER_COQ_TOKEN'

@@ -1,4 +1,4 @@
-FROM debian:11-slim
+FROM debian:12-slim
 
 # This 'bare' image does not have any OCaml compiler Docker layer:
 # * it keeps all other layers (APT packages, OPAM 2.0, etc.)
