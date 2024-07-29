@@ -9,7 +9,7 @@
 
 This repository provides parent images for [Docker](https://www.docker.com/) images of the [Coq](https://github.com/coq/coq) proof assistant.
 
-These images are based on [Debian 11 Slim](https://hub.docker.com/_/debian/):
+These images are based on [Debian 12 Slim](https://hub.docker.com/_/debian/):
 
 |   | GitHub repo                                                             | Type          | Docker Hub                                             |
 |---|-------------------------------------------------------------------------|---------------|--------------------------------------------------------|
