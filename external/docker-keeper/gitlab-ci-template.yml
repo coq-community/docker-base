@@ -91,6 +91,7 @@ prepare-artifacts:
     - echo "$CI_JOB_URL" > generated/CI_JOB_URL.txt
     - |
       # Launch keeper.py with proper options
+      set -vx
       run() {
         echo -n 'RUN '
         for arg; do printf "'%s' " "${arg//\'/\'\\\'\'}"; done
