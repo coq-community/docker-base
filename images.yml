@@ -6,9 +6,7 @@ args:
   OPAM_VERSION: '2.2.1'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.6'
-  # NOTE: do not bump dune's version before this issue is resolved:
-  # https://github.com/ocaml/dune/pull/9895#issuecomment-2207889822
-  DUNE_VERSION: '3.13.1'
+  DUNE_VERSION: '3.16.0'
   ZARITH_VERSION: '1.14'
   NUM_VERSION: '1.5-1'
 propagate:
