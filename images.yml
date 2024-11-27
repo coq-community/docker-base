@@ -3,10 +3,10 @@ base_url: 'https://gitlab.com/coq-community/docker-base'
 active: true
 docker_repo: 'coqorg/base'
 args:
-  OPAM_VERSION: '2.2.1'
+  OPAM_VERSION: '2.3.0'
   # pass these args albeit they are not used by all Dockerfiles:
   OCAMLFIND_VERSION: '1.9.6'
-  DUNE_VERSION: '3.16.0'
+  DUNE_VERSION: '3.16.1'
   ZARITH_VERSION: '1.14'
   NUM_VERSION: '1.5-1'
 propagate:
