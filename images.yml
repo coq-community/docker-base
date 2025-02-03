@@ -1,7 +1,7 @@
 ---
 base_url: 'https://gitlab.com/coq-community/docker-base'
 active: true
-docker_repo: 'coqorg/base'
+docker_repo: 'rocq/base'
 args:
   OPAM_VERSION: '2.3.0'
   # pass these args albeit they are not used by all Dockerfiles:
@@ -27,12 +27,12 @@ images:
         - '4.12.1-flambda'
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
         COMPILER_PACKAGE: 'ocaml-variants.{matrix[tag][%-*]}+options,ocaml-option-flambda'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag:
         - '4.11.2-flambda'
@@ -41,72 +41,72 @@ images:
         - '4.08.1-flambda'
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag:
         - '4.07.1-flambda'
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
         OCAMLFIND_VERSION: '1.9.1'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag:
         - '5.0.0'
         - '4.13.1'
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag:
         - '4.07.1'
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
         OCAMLFIND_VERSION: '1.9.1'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag: ['4.05.0']
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
         ZARITH_VERSION: '1.13'
         NUM_VERSION: '0'
         OCAMLFIND_VERSION: '1.9.1'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag: ['4.02.3']
     build:
       context: './base'
-      dockerfile: './single/Dockerfile'
+      dockerfile: './coq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag]}'
         ZARITH_VERSION: '1.11'
         NUM_VERSION: '0'
         OCAMLFIND_VERSION: '1.9.1'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       tag: ['bare']
     build:
       context: './base'
-      dockerfile: './bare/Dockerfile'
+      dockerfile: './coq-bare/Dockerfile'
       tags:
-        - tag: '{matrix[tag]}'
+        - tag: 'coq_{matrix[tag]}'
