@@ -17,39 +17,115 @@ propagate:
     strategy:
       - when: 'rebuild-all'
         mode: 'rebuild-all'
-      # TODO: improve with ocaml keywords in docker-coq?
+      # don't propagate if "all keywords \subset {rocq}"
+      - when: 'forall'
+        expr: '{keywords[/#/,][#,]}'
+        subset: 'rocq'
+        mode: 'nil'
+      # propagate if "one keyword = coq"
+      - when: 'exists'
+        expr: '{keywords[/#/,][#,]}'
+        subset: 'coq'
+        mode: 'rebuild-all'
+      - # when OPTIONAL for last rule
+        mode: 'nil'
+  # TODO: we may want to add ocaml keywords in docker-rocq
+  rocq:
+    api_token_env_var: 'DOCKER_ROCQ_TOKEN'
+    gitlab_domain: 'gitlab.com'
+    gitlab_project: '63032389'
+    strategy:
+      - when: 'rebuild-all'
+        mode: 'rebuild-all'
+      # don't propagate if "all keywords \subset {coq}"
+      - when: 'forall'
+        expr: '{keywords[/#/,][#,]}'
+        subset: 'coq'
+        mode: 'nil'
+      # propagate if "one keyword = rocq"
+      - when: 'exists'
+        expr: '{keywords[/#/,][#,]}'
+        subset: 'rocq'
+        mode: 'rebuild-all'
+      - # when OPTIONAL for last rule
+        mode: 'nil'
 images:
-  - matrix:
+  - matrix: &matrix_412_up_flambda
       tag:
         - '5.0.0-flambda'
         - '4.14.2-flambda'
         - '4.13.1-flambda'
         - '4.12.1-flambda'
-    build:
+    build: &build_412_up_flambda_rocq
+      keywords: ['rocq']
       context: './base'
-      dockerfile: './coq-single/Dockerfile'
+      dockerfile: './rocq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
         COMPILER_PACKAGE: 'ocaml-variants.{matrix[tag][%-*]}+options,ocaml-option-flambda'
       tags:
-        - tag: 'coq_{matrix[tag]}'
+        - tag: 'rocq_{matrix[tag]}'
   - matrix:
+      <<: *matrix_412_up_flambda
+    build:
+      <<: *build_412_up_flambda_rocq
+      keywords: ['coq']
+      dockerfile: './coq-single/Dockerfile'
+      tags:
+        - tag: 'coq_{matrix[tag]}'
+  - matrix: &matrix_408_up_flambda
       tag:
         - '4.11.2-flambda'
         - '4.10.2-flambda'
         - '4.09.1-flambda'
         - '4.08.1-flambda'
-    build:
+    build: &build_408_up_flambda
+      keywords: ['rocq']
       context: './base'
-      dockerfile: './coq-single/Dockerfile'
+      dockerfile: './rocq-single/Dockerfile'
       args:
         COMPILER: '{matrix[tag][//-/+]}'
       tags:
+        - tag: 'rocq_{matrix[tag]}'
+  - matrix:
+      <<: *matrix_408_up_flambda
+    build:
+      <<: *build_408_up_flambda
+      keywords: ['coq']
+      dockerfile: './coq-single/Dockerfile'
+      tags:
         - tag: 'coq_{matrix[tag]}'
+  ####################################################
+  # compiler without flambda, for rocq-native images #
+  ####################################################
+  - matrix: &matrix_412_up
+      tag:
+        - '5.0.0'
+        - '4.13.1'
+    build: &build_412_up_rocq
+      keywords: ['rocq']
+      context: './base'
+      dockerfile: './rocq-single/Dockerfile'
+      args:
+        COMPILER: '{matrix[tag]}'
+      tags:
+        - tag: 'rocq_{matrix[tag]}'
+  - matrix:
+      <<: *matrix_412_up
+    build:
+      <<: *build_412_up_rocq
+      keywords: ['coq']
+      dockerfile: './coq-single/Dockerfile'
+      tags:
+        - tag: 'coq_{matrix[tag]}'
+  ##########################################################
+  # !!! # "rocq-prover" requires "ocaml" >= "4.09.0" # !!! #
+  ##########################################################
   - matrix:
       tag:
         - '4.07.1-flambda'
     build:
+      keywords: ['coq']
       context: './base'
       dockerfile: './coq-single/Dockerfile'
       args:
@@ -57,21 +133,14 @@ images:
         OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: 'coq_{matrix[tag]}'
-  - matrix:
-      tag:
-        - '5.0.0'
-        - '4.13.1'
-    build:
-      context: './base'
-      dockerfile: './coq-single/Dockerfile'
-      args:
-        COMPILER: '{matrix[tag]}'
-      tags:
-        - tag: 'coq_{matrix[tag]}'
+  ####################################################
+  # compiler without flambda (for coq-native images) #
+  ####################################################
   - matrix:
       tag:
         - '4.07.1'
     build:
+      keywords: ['coq']
       context: './base'
       dockerfile: './coq-single/Dockerfile'
       args:
@@ -82,6 +151,7 @@ images:
   - matrix:
       tag: ['4.05.0']
     build:
+      keywords: ['coq']
       context: './base'
       dockerfile: './coq-single/Dockerfile'
       args:
@@ -94,6 +164,7 @@ images:
   - matrix:
       tag: ['4.02.3']
     build:
+      keywords: ['coq']
       context: './base'
       dockerfile: './coq-single/Dockerfile'
       args:
@@ -106,6 +177,7 @@ images:
   - matrix:
       tag: ['bare']
     build:
+      keywords: ['coq']
       context: './base'
       dockerfile: './coq-bare/Dockerfile'
       tags:
