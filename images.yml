@@ -148,32 +148,6 @@ images:
         OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: 'coq_{matrix[tag]}'
-  - matrix:
-      tag: ['4.05.0']
-    build:
-      keywords: ['coq']
-      context: './base'
-      dockerfile: './coq-single/Dockerfile'
-      args:
-        COMPILER: '{matrix[tag]}'
-        ZARITH_VERSION: '1.13'
-        NUM_VERSION: '0'
-        OCAMLFIND_VERSION: '1.9.1'
-      tags:
-        - tag: 'coq_{matrix[tag]}'
-  - matrix:
-      tag: ['4.02.3']
-    build:
-      keywords: ['coq']
-      context: './base'
-      dockerfile: './coq-single/Dockerfile'
-      args:
-        COMPILER: '{matrix[tag]}'
-        ZARITH_VERSION: '1.11'
-        NUM_VERSION: '0'
-        OCAMLFIND_VERSION: '1.9.1'
-      tags:
-        - tag: 'coq_{matrix[tag]}'
   - matrix: &matrix_bare
       tag: ['bare']
     build: &build_bare_rocq
