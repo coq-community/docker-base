@@ -65,14 +65,6 @@ images:
         COMPILER_PACKAGE: 'ocaml-variants.{matrix[tag][%-*]}+options,ocaml-option-flambda'
       tags:
         - tag: 'rocq_{matrix[tag]}'
-  - matrix:
-      <<: *matrix_412_up_flambda
-    build:
-      <<: *build_412_up_flambda_rocq
-      keywords: ['coq']
-      dockerfile: './coq-single/Dockerfile'
-      tags:
-        - tag: 'coq_{matrix[tag]}'
   - matrix: &matrix_408_up_flambda
       tag:
         - '4.11.2-flambda'
@@ -87,17 +79,9 @@ images:
         COMPILER: '{matrix[tag][//-/+]}'
       tags:
         - tag: 'rocq_{matrix[tag]}'
-  - matrix:
-      <<: *matrix_408_up_flambda
-    build:
-      <<: *build_408_up_flambda
-      keywords: ['coq']
-      dockerfile: './coq-single/Dockerfile'
-      tags:
-        - tag: 'coq_{matrix[tag]}'
-  ####################################################
-  # compiler without flambda, for rocq-native images #
-  ####################################################
+  #####################################################
+  # compilers without flambda, for rocq-native images #
+  #####################################################
   - matrix: &matrix_412_up
       tag:
         - '5.0.0'
@@ -110,6 +94,25 @@ images:
         COMPILER: '{matrix[tag]}'
       tags:
         - tag: 'rocq_{matrix[tag]}'
+  ##########################################################
+  # !!! # "rocq-prover" requires "ocaml" >= "4.09.0" # !!! #
+  ##########################################################
+  - matrix:
+      <<: *matrix_412_up_flambda
+    build:
+      <<: *build_412_up_flambda_rocq
+      keywords: ['coq']
+      dockerfile: './coq-single/Dockerfile'
+      tags:
+        - tag: 'coq_{matrix[tag]}'
+  - matrix:
+      <<: *matrix_408_up_flambda
+    build:
+      <<: *build_408_up_flambda
+      keywords: ['coq']
+      dockerfile: './coq-single/Dockerfile'
+      tags:
+        - tag: 'coq_{matrix[tag]}'
   - matrix:
       <<: *matrix_412_up
     build:
@@ -118,9 +121,6 @@ images:
       dockerfile: './coq-single/Dockerfile'
       tags:
         - tag: 'coq_{matrix[tag]}'
-  ##########################################################
-  # !!! # "rocq-prover" requires "ocaml" >= "4.09.0" # !!! #
-  ##########################################################
   - matrix:
       tag:
         - '4.07.1-flambda'
@@ -174,11 +174,19 @@ images:
         OCAMLFIND_VERSION: '1.9.1'
       tags:
         - tag: 'coq_{matrix[tag]}'
-  - matrix:
+  - matrix: &matrix_bare
       tag: ['bare']
-    build:
-      keywords: ['coq']
+    build: &build_bare_rocq
+      keywords: ['rocq']
       context: './base'
+      dockerfile: './rocq-bare/Dockerfile'
+      tags:
+        - tag: 'rocq_{matrix[tag]}'
+  - matrix:
+      <<: *matrix_bare
+    build:
+      <<: *build_bare_rocq
+      keywords: ['coq']
       dockerfile: './coq-bare/Dockerfile'
       tags:
         - tag: 'coq_{matrix[tag]}'
