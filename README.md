@@ -20,10 +20,15 @@ These images are based on [Debian 12 Slim](https://hub.docker.com/_/debian/):
 
 This Dockerfile repository is [mirrored on GitLab](https://gitlab.com/coq-community/docker-base), but [issues](https://github.com/coq-community/docker-base/issues) and [pull requests](https://github.com/coq-community/docker-base/pulls) are tracked on GitHub.
 
-Note that these base images do **not** contain the Rocq Prover nor the Coq proof assistant.
-They just contain a **sudo** user with UID=GID=1000 and /home/rocq or /home/coq as homedir,
-as well as one **opam** switch, and some minimal **apt** and **opam** dependencies.
-The "bare" images do **not** contain any **opam** switch, just the **opam** binary.
-The default entrypoint is `ENTRYPOINT ["opam", "exec", "--"]` for all these images.
+> [!NOTE]
+>
+> * Note that these base images do **not** contain the Rocq Prover nor the Coq proof assistant.
+>
+>   They just contain a **sudo** user with UID=GID=1000 and /home/rocq or /home/coq as homedir,  
+>   as well as one **opam** switch, and some minimal **apt** and **opam** dependencies.
+>
+> * The "bare" images do **not** contain any **opam** switch, just the **opam** binary.
+>
+> * The default entrypoint is `ENTRYPOINT ["opam", "exec", "--"]` for all these images.
 
 <!-- tags -->
