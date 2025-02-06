@@ -5,9 +5,9 @@
 [![pulls](https://img.shields.io/docker/pulls/rocq/base.svg)](https://hub.docker.com/r/rocq/base "Number of pulls from Docker Hub")
 [![stars](https://img.shields.io/docker/stars/rocq/base.svg)](https://hub.docker.com/r/rocq/base "Star the image on Docker Hub")  
 [![dockerfile](https://img.shields.io/badge/dockerfile%20on-github-blue.svg)](https://github.com/coq-community/docker-base "Dockerfile source repository")
-[![coq](https://img.shields.io/badge/see%20also-rocq%2Frocq--prover-brightgreen.svg)](https://hub.docker.com/r/rocq/rocq-prover "Docker images of Rocq")
+[![rocq-prover](https://img.shields.io/badge/see%20also-rocq%2Frocq--prover-brightgreen.svg)](https://hub.docker.com/r/rocq/rocq-prover "Docker images of the Rocq Prover")
 
-This repository provides parent images for [Docker](https://www.docker.com/) images of the [Coq](https://github.com/coq/coq) proof assistant.
+This repository provides parent images for [Docker](https://www.docker.com/) images of the [Rocq Prover](https://rocq-prover.org).
 
 These images are based on [Debian 12 Slim](https://hub.docker.com/_/debian/):
 
