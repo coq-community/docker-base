@@ -9,7 +9,7 @@
 
 This repository provides parent images for [Docker](https://www.docker.com/) images of the [Rocq Prover](https://rocq-prover.org).
 
-These images are based on [Debian 12 Slim](https://hub.docker.com/_/debian/):
+These images are based on [Debian 12 Slim](https://hub.docker.com/_/debian/), and relying on the last version of [opam 2.x](https://opam.ocaml.org/doc/Manual.html):
 
 |   | GitHub repo                                                             | Type          | Docker Hub                                                       |
 |---|-------------------------------------------------------------------------|---------------|------------------------------------------------------------------|
